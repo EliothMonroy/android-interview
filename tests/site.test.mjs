@@ -4,7 +4,7 @@ import { readFile, access } from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
 import vm from 'node:vm';
 const html=await readFile('index.html','utf8');
-const code=await Promise.all(['content-kotlin.js','content-android.js','content-design-extra.js','content-interview-extra.js','app.js'].map(f=>readFile(f,'utf8')));
+const code=await Promise.all(['content-kotlin.js','content-android.js','content-design-extra.js','content-interview-extra.js','content-kotlin-review.js','content-android-review.js','content-design-review.js','app.js'].map(f=>readFile(f,'utf8')));
 function boot(saved={},hash='') {
  const dom=new JSDOM(html,{url:`https://guide.test/${hash}`,runScripts:'outside-only'});
  const w=dom.window;
@@ -20,7 +20,7 @@ test('all five primers render all interview lessons with valid quizzes and sourc
  try {
  assert.equal(w.PRIMERS.length,5);let count=0;
  for(const s of w.PRIMERS){assert.ok(s.sources.every(x=>x.url.startsWith('https://')));const ids=new Set();for(const l of s.lessons){count++;for(const field of ['title','summary','useCase','code','pitfall','question','answer']) assert.ok(typeof l[field] === 'string' && l[field].trim(), `${s.id}/${l.id} missing ${field}`);assert.ok(!ids.has(l.id));ids.add(l.id);assert.ok(l.quiz.correct>=0&&l.quiz.correct<l.quiz.options.length);go(w,`${s.id}/${l.id}`);assert.equal(d.querySelector('h2').textContent,l.title);assert.equal(d.querySelector('pre code').textContent,l.code);d.querySelector(`[data-answer="${l.quiz.correct}"]`).click();assert.match(d.getElementById('quiz-feedback').textContent,/^Correct\./);}}
- assert.equal(count,85);
+ assert.equal(count,99);
  } finally {close();}
 });
 test('progress persists, can be toggled, and resets',()=>{
@@ -44,7 +44,7 @@ test('service worker caches every local dependency and falls back offline',async
  for(const file of [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map(x=>x[1]).filter(x=>!x.startsWith('http')))assert.ok(added.includes(`./${file}`));
  handlers.activate({waitUntil:p=>pending=p});await pending;assert.deepEqual(deleted,['android-field-guide-old']);
  cacheMap.set('./index.html','offline page');handlers.fetch({request:{url:'https://guide.test/',method:'GET',mode:'navigate'},respondWith:p=>pending=p});assert.equal(await pending,'offline page');
- cacheMap.set('https://guide.test/app.js?v=2','cached js');handlers.fetch({request:{url:'https://guide.test/app.js?v=2',method:'GET',mode:'cors'},respondWith:p=>pending=p});assert.equal(await pending,'cached js');
+ cacheMap.set('https://guide.test/app.js?v=3','cached js');handlers.fetch({request:{url:'https://guide.test/app.js?v=3',method:'GET',mode:'cors'},respondWith:p=>pending=p});assert.equal(await pending,'cached js');
 });
 test('skip link preserves current lesson and navigation focuses new heading',()=>{
  const {w,d,close}=boot({},'#android/compose');try{const link=d.querySelector('.skip-link');link.click();assert.equal(w.location.hash,'#android/compose');assert.equal(d.activeElement.id,'main');go(w,'design/rest');assert.equal(d.activeElement,d.querySelector('.lesson-heading'));}finally{close();}
@@ -57,7 +57,7 @@ test('optional model context tool uses reviewed state and rejects invalid input'
 test('expanded syllabus preserves original IDs and saved review history',()=>{
  const {w,d,close}=boot({'aifg-completed':'["kotlin/kotlin-null","android/compose","design/graphql"]'},'#design/graphql');
  try {
-  const expected={kotlin:16,structures:11,algorithms:17,android:24,design:17};
+  const expected={kotlin:19,structures:12,algorithms:19,android:28,design:21};
   for(const s of w.PRIMERS)assert.equal(s.lessons.length,expected[s.id]);
   assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'true');
   go(w,'android/compose');assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'true');

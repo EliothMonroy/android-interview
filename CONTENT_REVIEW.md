@@ -31,3 +31,11 @@ Review marks continue to mean self-reported review. There is no automatic claim 
 Current Android/Kotlin guidance was checked against official documentation, with references included in each primer. Technical recommendations are grounded in the [Android architecture recommendations](https://developer.android.com/topic/architecture/recommendations), [testing fundamentals](https://developer.android.com/training/testing/fundamentals), [Kotlin documentation](https://kotlinlang.org/docs/home.html), and the section-specific primary references. Topic prioritization and exercises are editorial judgments rather than an employer-issued syllabus.
 
 Automated checks exercise lesson rendering, IDs, quizzes, saved progress, navigation, theme behavior and offline assets. Kotlin and Android code is instructional: contextual snippets need the stated imports, dependencies and app types. It has not been compiled into an Android application. Real-device/browser visual QA is not part of this content review.
+
+## Second pass
+
+The second review targeted topics previously mentioned without enough implementation detail: canceling obsolete Flow work and handling slow collectors, channels versus broadcasts, Unicode assumptions, linked-list cycle detection, grid traversal, two-dimensional DP, concrete Room queries and indices, Fragment/Compose cleanup, observable Compose state, UI-event ownership, conditional HTTP caching, GraphQL writes, API evolution and account-switch races.
+
+These additions deepen common interview material; they do not change the scope into an exhaustive reference for every Android specialty. The same interactive lesson format, saved review IDs and offline behavior remain in place.
+
+The second pass adds 14 lessons (99 total). It also fixes three practice snippets by placing executable checks inside `main()`, so they use ordinary Kotlin-file syntax rather than implicitly requiring a Kotlin script. Nine automated site checks pass; Kotlin compilation remains unverified.

@@ -492,7 +492,7 @@ fun title(properties: java.util.Properties): String {
 }
 // intArrayOf(1) == intArrayOf(1) is false.`,
       'Do not use identity equality for boxed numbers or strings. Java nullability annotations improve safety but do not replace input validation.',
-      'Why explicitly assign a platform value to String??',
+      'Why explicitly assign a Java platform value to nullable String?',
       'It establishes a nullable Kotlin contract so subsequent accesses require safe handling.',
       'Which compares two IntArray values element by element?', ['===', '==', 'contentEquals'], 2,
       'Array equality otherwise compares array objects, not their contained values.'),
