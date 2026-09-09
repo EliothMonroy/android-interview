@@ -223,3 +223,5 @@ pre code { display: block; min-width: min-content; }
 @media (min-width: 1100px) {
   .page-footer { padding-left: 2.8rem; padding-right: 2.8rem; }
 }
+
+.study-note { font-size: .875rem; color: var(--muted); max-width: 72ch; margin-bottom: 1rem; }

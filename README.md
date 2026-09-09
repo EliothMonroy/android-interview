@@ -1,6 +1,6 @@
 # Android Interview Field Guide
 
-A mobile-first, dependency-free study website with 32 concise lessons across Kotlin, data structures, algorithms, Android (Views and Compose), and mobile system design.
+A mobile-first, dependency-free study website with 85 concise lessons across Kotlin, data structures, algorithms, Android (Views and Compose), and mobile system design.
 
 Each lesson has a Kotlin example, a practical use case, a pitfall, a revealable interview answer, and an immediate-feedback quiz. The algorithms section also includes a step-through binary search lab. Reviewed lessons and light/dark/system preferences stay in local browser storage.
 
@@ -26,8 +26,12 @@ npm test
 npm run build
 ```
 
-`dist/` contains only the eight public assets. `jsdom` is a development-only test dependency. Tests execute all 32 lessons, quiz answers, theme changes, local progress, navigation, binary-search outcomes, and service-worker cache/fallback contracts. They do not replace real-device visual or offline-browser testing. Kotlin examples are statically reviewed teaching snippets, not an executable Android project; Android examples omit imports and app-specific setup.
+`dist/` contains only the ten public assets. `jsdom` is a development-only test dependency. Tests execute all 85 lessons, quiz answers, theme changes, local progress, navigation, binary-search outcomes, and service-worker cache/fallback contracts. They do not replace real-device visual or offline-browser testing. Kotlin examples are statically reviewed teaching snippets, not an executable Android project; Android examples omit imports and app-specific setup.
 
-Content lives in `content-kotlin.js` and `content-android.js`; official references appear under each primer. Keep section/lesson IDs stable to preserve saved progress. Bump the cache name in `sw.js` whenever shipped assets change. Serve all assets together. No analytics or remote calls are made by the study app.
+Content lives in `content-kotlin.js` and `content-android.js`; official references appear under each primer. Keep section/lesson IDs stable to preserve saved progress. Bump the cache name in `sw.js` and the asset URL version in both `index.html` and the worker asset list whenever shipped assets change. Versioned URLs prevent an older cache from hiding new content. Serve all assets together. No analytics or remote calls are made by the study app.
 
 On browsers exposing `document.modelContext`, an optional `set_current_lesson_reviewed` tool mirrors the visible review button. Its contract is tested with a mock registry; registration in a live WebMCP-enabled browser has not been verified.
+
+## Coverage review
+
+The initial 32-lesson refresher was expanded to 85 lessons: 16 Kotlin, 11 data structures, 17 algorithms, 24 Android, and 17 mobile system design. See [CONTENT_REVIEW.md](CONTENT_REVIEW.md) for the gap assessment, scope, sources and practice method. Reading completion is not a readiness certificate; use the applied drills and tailor specialist study to the target role.

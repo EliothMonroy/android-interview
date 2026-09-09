@@ -9,6 +9,26 @@ window.PRIMERS = [...(window.PRIMERS || []), {
     {title: 'Vector drawables', url: 'https://developer.android.com/develop/ui/views/graphics/vector-drawable-resources'},
     {title: 'WorkManager', url: 'https://developer.android.com/develop/background-work/background-tasks/persistent/getting-started'},
     {title: 'Performance guide', url: 'https://developer.android.com/topic/performance/overview'}
+,
+    {"title": "Navigation and back stack", "url": "https://developer.android.com/guide/navigation/backstack"},
+    {"title": "Runtime permissions", "url": "https://developer.android.com/training/permissions/requesting"},
+    {"title": "Room migrations", "url": "https://developer.android.com/training/data-storage/room/migrating-db-versions"},
+    {"title": "DataStore", "url": "https://developer.android.com/topic/libraries/architecture/datastore"},
+    {"title": "Hilt injection and scopes", "url": "https://developer.android.com/training/dependency-injection/hilt-android"},
+    {"title": "Compose side effects", "url": "https://developer.android.com/develop/ui/compose/side-effects"},
+    {"title": "Views in Compose", "url": "https://developer.android.com/develop/ui/compose/migrate/interoperability-apis/views-in-compose"},
+    {"title": "Coroutine tests", "url": "https://developer.android.com/kotlin/coroutines/test"},
+    {"title": "Compose UI tests", "url": "https://developer.android.com/develop/ui/compose/testing"},
+    {"title": "ANR diagnostics", "url": "https://developer.android.com/topic/performance/vitals/anr"},
+    {"title": "Build variants", "url": "https://developer.android.com/build/build-variants"},
+    {"title": "Network security configuration", "url": "https://developer.android.com/privacy-and-security/security-config"},
+    {"title": "Notification channels", "url": "https://developer.android.com/develop/ui/compose/notifications/channels"},
+    {"title": "Accessibility semantics", "url": "https://developer.android.com/develop/ui/compose/accessibility/semantics"}
+,
+    {"title": "Processes and threads", "url": "https://developer.android.com/guide/components/processes-and-threads"},
+    {"title": "Android runtime", "url": "https://source.android.com/docs/core/runtime"},
+    {"title": "Binder IPC", "url": "https://source.android.com/docs/core/architecture/ipc/binder-overview"},
+    {"title": "Handler API", "url": "https://developer.android.com/reference/android/os/Handler"}
   ], lessons: [
     {id: 'components', title: 'Components & the manifest', summary: 'Activities host user interaction; services perform work without UI; receivers handle broadcasts; providers expose structured data. The manifest declares components, permissions and entry points.', useCase: 'Explain how tapping a launcher icon or deep link enters an app.', language: 'kotlin',
       code: `// MainActivity must also be declared in AndroidManifest.xml.
@@ -108,7 +128,322 @@ fun Feed(items: List<Article>) {
 // Compose UI test; a test rule and screen setup are required:
 composeRule.onNodeWithText("Retry").performClick()
 composeRule.onNodeWithText("Loaded").assertIsDisplayed()`,
-      pitfall: 'suspend does not automatically move blocking work off the main thread. Performance measured in a debug build can be misleading.', question: 'How would you investigate jank?', answer: 'Reproduce on a representative device, inspect a trace, then measure the suspected fix. Use Macrobenchmark for user journeys and unit tests with fakes for logic.', quiz: {question: 'What is the best first step for a slow screen?', options: ['Add caches everywhere', 'Measure a reproducible case', 'Move every function to a thread'], correct: 1, explanation: 'A trace and baseline identify the actual bottleneck and show whether the change helps.'}}
+      pitfall: 'suspend does not automatically move blocking work off the main thread. Performance measured in a debug build can be misleading.', question: 'How would you investigate jank?', answer: 'Reproduce on a representative device, inspect a trace, then measure the suspected fix. Use Macrobenchmark for user journeys and unit tests with fakes for logic.', quiz: {question: 'What is the best first step for a slow screen?', options: ['Add caches everywhere', 'Measure a reproducible case', 'Move every function to a thread'], correct: 1, explanation: 'A trace and baseline identify the actual bottleneck and show whether the change helps.'}},
+{
+  "id": "navigation-lifecycle",
+  "title": "Lifecycle, back stack & deep links",
+  "summary": "Created → started → resumed describes setup, visibility and interaction. Pause/stop release appropriately scoped resources. Navigation destinations form a back stack; external deep links are untrusted entry points.",
+  "useCase": "Explain backgrounding, rotation and returning from a detail screen.",
+  "code": "// Navigation Compose 2 typed routes; requires serialization setup.\n@Serializable data object FeedRoute\n@Serializable data class DetailRoute(val articleId: String)\n\nnavController.navigate(DetailRoute(articleId = \"42\")) {\n    launchSingleTop = true\n}\n// NavHost must declare both destinations.\n// Destination: backStackEntry.toRoute<DetailRoute>().articleId\nnavController.popBackStack() // Inspect false: no destination left.",
+  "language": "kotlin",
+  "pitfall": "Do not equate onPause with invisibility or onStop with process termination. Pass IDs, reload data, and authorize access even for verified App Links.",
+  "question": "How do Back and Up differ?",
+  "answer": "Back follows navigation history, potentially leaving the app. Up follows the app hierarchy. A deep link may need a constructed parent stack; test cold and warm entry.",
+  "quiz": {
+    "question": "What should a detail route normally carry?",
+    "options": [
+      "A serialized Activity",
+      "A stable record ID",
+      "The full mutable database graph"
+    ],
+    "correct": 1,
+    "explanation": "An ID keeps arguments small and lets the destination restore data through its repository."
+  }
+},
+{
+  "id": "permissions-results",
+  "title": "Permissions & Activity Result APIs",
+  "summary": "Request access at the feature boundary, explain why when appropriate, and handle denial. Register Activity Result launchers consistently during initialization so results survive recreation.",
+  "useCase": "Ask for camera access only after the user chooses the scanner.",
+  "code": "// Inside a ComponentActivity; manifest declares CAMERA.\nprivate val requestCamera = registerForActivityResult(\n    ActivityResultContracts.RequestPermission()\n) { granted ->\n    if (granted) openScanner() else showManualEntry()\n}\n// On a user action, check permission first and show rationale if needed.\n// Then: requestCamera.launch(Manifest.permission.CAMERA)\n// openScanner/showManualEntry are app-specific handlers.",
+  "language": "kotlin",
+  "pitfall": "Permission can be revoked. Recheck before protected operations. Prefer the system photo picker instead of broad media access when selecting a photo.",
+  "question": "Why not register a launcher only inside the click callback?",
+  "answer": "Results may return after recreation, before another click occurs. Registration must be available consistently; launch is the user-triggered step.",
+  "quiz": {
+    "question": "A user denies camera access. What next?",
+    "options": [
+      "Keep requesting immediately",
+      "Offer manual input or another fallback",
+      "Crash the feature"
+    ],
+    "correct": 1,
+    "explanation": "Denial is an expected state; preserve the parts of the app that do not need the permission."
+  }
+},
+{
+  "id": "room",
+  "title": "Room, transactions & migrations",
+  "summary": "Room validates SQL and maps rows to typed models. Transactions preserve invariants across writes. Versioned migrations preserve installed users’ data as schemas change.",
+  "useCase": "Save a draft and its upload operation together, then evolve the schema safely.",
+  "code": "// Room 2 API example. AppDatabase extends RoomDatabase.\nsuspend fun saveDraft(db: AppDatabase, draft: DraftEntity) {\n    db.withTransaction {\n        db.drafts().upsert(draft)\n        db.outbox().insert(PendingUpload(draft.id))\n    }\n}\n// Export schemas. Register and test every supported migration path.\n// Example SQL for a new column in an existing notes table:\n// ALTER TABLE notes ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0",
+  "language": "kotlin",
+  "pitfall": "Destructive migration deletes data. Keep network calls outside database transactions; long transactions hold resources and delay other work.",
+  "question": "What should a migration test verify beyond opening the database?",
+  "answer": "Create an old schema with representative records, migrate, validate the new schema, and assert preserved values and defaults. Include multi-version upgrade paths.",
+  "quiz": {
+    "question": "Why wrap the draft and outbox writes in a transaction?",
+    "options": [
+      "For faster HTTP",
+      "To persist both or neither",
+      "To prevent all process death"
+    ],
+    "correct": 1,
+    "explanation": "Atomicity prevents a saved draft without upload intent or upload intent without the draft."
+  }
+},
+{
+  "id": "datastore",
+  "title": "Storage choices & DataStore",
+  "summary": "Use Room for queryable relational records, DataStore for small settings, files for blobs and cache directories for replaceable data. DataStore exposes asynchronous reads and transactional updates.",
+  "useCase": "Persist a user preference without blocking the main thread.",
+  "code": "// Top-level property; one DataStore instance per file per process.\nval Context.settings by preferencesDataStore(name = \"settings\")\nval compactKey = booleanPreferencesKey(\"compact\")\n\nsuspend fun setCompact(context: Context, enabled: Boolean) {\n    context.settings.edit { preferences ->\n        preferences[compactKey] = enabled\n    }\n}\n// Read with context.settings.data.map { it[compactKey] ?: false }",
+  "language": "kotlin",
+  "pitfall": "DataStore is not a relational database and does not encrypt values automatically. Handle read failures and design migration from older settings storage.",
+  "question": "Why not store a growing offline article catalog in DataStore?",
+  "answer": "The catalog needs indexed queries, partial updates and relationships. Room is a better match; DataStore suits compact settings or small typed state.",
+  "quiz": {
+    "question": "Which store best fits a Boolean display preference?",
+    "options": [
+      "DataStore",
+      "An entire SQL server",
+      "A Bitmap"
+    ],
+    "correct": 0,
+    "explanation": "DataStore provides an asynchronous, durable settings API without the overhead of relational modeling."
+  }
+},
+{
+  "id": "dependency-injection",
+  "title": "Dependency injection & Hilt scopes",
+  "summary": "Constructor injection makes dependencies explicit. Hilt assembles the graph; scopes reuse instances within component lifetimes. Singleton means application-process lifetime, not permanent storage.",
+  "useCase": "Replace a repository in tests while sharing expensive application services.",
+  "code": "interface Clock { fun nowMillis(): Long }\nclass DeviceClock @Inject constructor() : Clock {\n    override fun nowMillis() = System.currentTimeMillis()\n}\n@Module\n@InstallIn(SingletonComponent::class)\nabstract class ClockModule {\n    @Binds @Singleton\n    abstract fun bindClock(impl: DeviceClock): Clock\n}\n// Requires Hilt plugin/compiler and @HiltAndroidApp Application.",
+  "language": "kotlin",
+  "pitfall": "An application-scoped object must not retain an Activity or its Views. Choose the narrowest useful scope; unscoped bindings are created when requested.",
+  "question": "How do ActivityScoped and ActivityRetainedScoped differ?",
+  "answer": "ActivityScoped belongs to an Activity instance. ActivityRetainedScoped spans its configuration recreations. ViewModelScoped belongs to one ViewModel.",
+  "quiz": {
+    "question": "What is the main testing benefit of constructor injection?",
+    "options": [
+      "Tests can supply a fake dependency",
+      "It removes all interfaces",
+      "It prevents runtime exceptions"
+    ],
+    "correct": 0,
+    "explanation": "Explicit dependencies let a test control time, networking and data without replacing global state."
+  }
+},
+{
+  "id": "compose-effects",
+  "title": "Compose effects & recomposition",
+  "summary": "Recomposition reruns affected UI functions. Effect keys control restarts; rememberUpdatedState supplies a fresh value without restarting long-lived work. Stable contracts help optimization but must be truthful.",
+  "useCase": "Run a timeout once per composition entry while invoking the latest callback.",
+  "code": "@Composable\nfun TimedHint(onTimeout: () -> Unit) {\n    val latestTimeout by rememberUpdatedState(onTimeout)\n    LaunchedEffect(Unit) {\n        delay(3_000)\n        latestTimeout()\n    }\n    Text(\"Think aloud before you code\")\n}\n// Leaving composition cancels this effect.\n// Use DisposableEffect for subscriptions requiring cleanup.",
+  "language": "kotlin",
+  "pitfall": "Adding @Stable does not make mutation observable. A mutableListOf change alone does not notify Compose; use observable state and publish new values.",
+  "question": "When should an effect key change?",
+  "answer": "When the operation should cancel and restart, such as switching a user ID. Use updated state for values that should be fresh without restarting the operation.",
+  "quiz": {
+    "question": "What happens if a LaunchedEffect key changes?",
+    "options": [
+      "The old work cancels and new work starts",
+      "Nothing ever changes",
+      "The Activity must restart"
+    ],
+    "correct": 0,
+    "explanation": "Effect keys define the identity of the composition-scoped coroutine."
+  }
+},
+{
+  "id": "view-internals",
+  "title": "View layout, touch & Compose interop",
+  "summary": "Views measure desired sizes within parent constraints, lay out positions, then draw. requestLayout schedules size/position work; invalidate requests drawing. Touch dispatch can be intercepted by a parent.",
+  "useCase": "Embed an existing widget in Compose during gradual migration.",
+  "code": "@Composable\nfun LegacyLabel(text: String) {\n    AndroidView(\n        factory = { context -> TextView(context) },\n        update = { view -> view.text = text },\n        modifier = Modifier.fillMaxWidth()\n    )\n}\n// factory creates the View; update applies current Compose state.\n// The opposite direction uses ComposeView inside a View hierarchy.",
+  "language": "kotlin",
+  "pitfall": "Do not create a View outside AndroidView and retain an obsolete Context. Custom touch handlers should support performClick and handle cancellation.",
+  "question": "Why separate AndroidView factory and update?",
+  "answer": "Creation should happen when the View is needed. Updates can happen repeatedly as state changes, without rebuilding the widget or losing its internal state.",
+  "quiz": {
+    "question": "A custom View changes desired dimensions. Which call fits?",
+    "options": [
+      "requestLayout()",
+      "Only set a background color",
+      "Always recreate the Activity"
+    ],
+    "correct": 0,
+    "explanation": "requestLayout asks the hierarchy to run measurement and layout again."
+  }
+},
+{
+  "id": "unit-tests",
+  "title": "Unit tests, fakes & virtual time",
+  "summary": "Test observable behavior with controlled dependencies. Fakes implement a useful subset of production behavior. Coroutine tests control scheduling and virtual time instead of sleeping.",
+  "useCase": "Verify business logic without a device or live network.",
+  "code": "interface UserSource { suspend fun name(): String }\nclass FakeUserSource : UserSource {\n    override suspend fun name() = \"Ada\"\n}\nclass Greeting(private val source: UserSource) {\n    suspend fun text() = \"Hello, \" + source.name()\n}\n@Test fun greetsLoadedUser() = runTest {\n    assertEquals(\"Hello, Ada\", Greeting(FakeUserSource()).text())\n}\n// Requires kotlinx-coroutines-test and a test assertion library.",
+  "language": "kotlin",
+  "pitfall": "runTest does not make arbitrary real dispatchers virtual. Inject test dispatchers sharing a scheduler; replace Main when testing Main-dependent ViewModels.",
+  "question": "What should tests assert for a failed refresh with cached data?",
+  "answer": "The cached content remains available, refresh failure is represented, and retry can recover. Avoid asserting private method calls when state is the real contract.",
+  "quiz": {
+    "question": "Why prefer virtual time over Thread.sleep in coroutine tests?",
+    "options": [
+      "It controls scheduling deterministically",
+      "It speeds up the network",
+      "It disables cancellation"
+    ],
+    "correct": 0,
+    "explanation": "A test scheduler advances coroutine delays without wall-clock waiting or timing races."
+  }
+},
+{
+  "id": "ui-tests",
+  "title": "Compose & Espresso UI tests",
+  "summary": "Instrumented tests run against Android UI behavior. Compose tests query semantics; Espresso finds Views. Cover critical journeys and synchronize with work instead of relying on sleeps.",
+  "useCase": "Confirm a user action changes visible state in either UI toolkit.",
+  "code": "// Compose test class; SearchBox comes from the Compose lesson.\n@get:Rule val composeRule = createComposeRule()\n@Test fun editsSearch() {\n    composeRule.setContent {\n        var query by remember { mutableStateOf(\"\") }\n        SearchBox(query, onQueryChange = { query = it })\n    }\n    composeRule.onNode(hasSetTextAction()).performTextInput(\"Ada\")\n    composeRule.onNodeWithText(\"Ada\").assertIsDisplayed()\n}\n// Espresso equivalent for a View button:\n// onView(withId(R.id.retry)).perform(click())",
+  "language": "kotlin",
+  "pitfall": "Framework idle detection does not cover every custom background operation. Expose controllable dependencies or appropriate idling resources; avoid brittle screen coordinates.",
+  "question": "Why use semantics instead of pixel positions in Compose tests?",
+  "answer": "Semantics express the user-facing role, label and actions. Coordinates change with density, fonts and layout, while semantic behavior is the intended contract.",
+  "quiz": {
+    "question": "Which assertion is most resilient?",
+    "options": [
+      "Button at exact pixel x=122",
+      "Expected text or role is available",
+      "A fixed 2-second delay elapsed"
+    ],
+    "correct": 1,
+    "explanation": "Tests should describe user-observable behavior and use synchronization for completion."
+  }
+},
+{
+  "id": "anrs-leaks",
+  "title": "ANRs, leaks & profiling",
+  "summary": "ANRs occur when required responsiveness deadlines are missed. Blocking I/O, lock contention and slow callbacks can contribute. A leak retains objects after their useful lifetime and increases memory pressure.",
+  "useCase": "Investigate an unresponsive screen using traces and heap evidence.",
+  "code": "// Debug-only diagnostics; invoke during Application startup.\nif (BuildConfig.DEBUG) {\n    StrictMode.setThreadPolicy(\n        StrictMode.ThreadPolicy.Builder()\n            .detectDiskReads()\n            .detectDiskWrites()\n            .detectNetwork()\n            .penaltyLog()\n            .build()\n    )\n}\n// Inspect stacks/traces; remove the cause, not just the detector.",
+  "language": "kotlin",
+  "pitfall": "An idle-looking main thread in one dump may not reveal the original stall. Examine timing and other threads; moving a task to I/O does not fix lock contention.",
+  "question": "How would you confirm a suspected Activity leak?",
+  "answer": "Recreate and close the screen repeatedly, then inspect retained instances and reference paths in a heap dump. Find the longer-lived owner retaining the Activity.",
+  "quiz": {
+    "question": "Which can freeze the main thread without doing I/O there?",
+    "options": [
+      "Waiting for a lock held by another thread",
+      "Using a string resource",
+      "Calling a pure constant getter"
+    ],
+    "correct": 0,
+    "explanation": "Lock contention can block responsiveness even when the expensive work occurs elsewhere."
+  }
+},
+{
+  "id": "build-release",
+  "title": "Gradle, variants & R8",
+  "summary": "Build types separate debug/release behavior; product flavors represent product dimensions. R8 shrinks, optimizes and obfuscates release code. Validate the actual release artifact, not only debug.",
+  "useCase": "Prepare an optimized build while keeping stack traces diagnosable.",
+  "code": "// Module build.gradle.kts; Android Gradle plugin already configured.\nandroid {\n    buildTypes {\n        getByName(\"release\") {\n            isMinifyEnabled = true\n            isShrinkResources = true\n            proguardFiles(\n                getDefaultProguardFile(\"proguard-android-optimize.txt\"),\n                \"proguard-rules.pro\"\n            )\n        }\n    }\n}",
+  "language": "kotlin",
+  "pitfall": "Overbroad keep rules disable useful optimization; missing rules can break reflection. Preserve mapping files per release and keep signing credentials out of source control.",
+  "question": "How are a build type and a flavor different?",
+  "answer": "A build type configures how to build, such as debug versus release. Flavors model product choices such as demo versus full; variants combine them.",
+  "quiz": {
+    "question": "Which artifact helps deobfuscate a release crash?",
+    "options": [
+      "The matching R8 mapping file",
+      "Any old debug APK",
+      "Only the app icon"
+    ],
+    "correct": 0,
+    "explanation": "Mappings correspond to a particular build and translate obfuscated symbols back to source names."
+  }
+},
+{
+  "id": "security-config",
+  "title": "Android security & network trust",
+  "summary": "Use HTTPS with platform trust validation and Network Security Config for scoped trust policies. Minimize exported surfaces, validate incoming URIs, and avoid exposing private files directly.",
+  "useCase": "Share a generated file with temporary access rather than a broad storage permission.",
+  "code": "// FileProvider must be declared with a narrow XML paths policy.\nval uri = FileProvider.getUriForFile(\n    context, context.packageName + \".files\", reportFile\n)\nval share = Intent(Intent.ACTION_SEND).apply {\n    type = \"application/pdf\"\n    putExtra(Intent.EXTRA_STREAM, uri)\n    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)\n}\ncontext.startActivity(Intent.createChooser(share, \"Share report\"))\n// context here is an Activity; reportFile is inside allowed paths.",
+  "language": "kotlin",
+  "pitfall": "Never install a trust-all certificate verifier to fix TLS errors. Do not expose the entire filesystem through FileProvider or assume obfuscation protects embedded secrets.",
+  "question": "Why separate debug certificate trust from release?",
+  "answer": "Local proxy or development certificates may help debugging but weaken production trust. Use debug-only overrides and verify the merged release manifest/configuration.",
+  "quiz": {
+    "question": "What is safer for sharing an app-private report?",
+    "options": [
+      "A raw file:// URI",
+      "A narrow content URI with a temporary grant",
+      "Making all app files public"
+    ],
+    "correct": 1,
+    "explanation": "FileProvider can expose only the intended file while the recipient receives limited URI access."
+  }
+},
+{
+  "id": "notifications-push",
+  "title": "Notifications & push delivery",
+  "summary": "Notification channels group user-controlled alert behavior on Android 8+. Android 13+ adds notification permission for non-exempt notifications. Push should trigger a data refresh, not be the sole durable record.",
+  "useCase": "Notify about a message while preserving a reliable in-app inbox.",
+  "code": "if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {\n    val channel = NotificationChannel(\n        \"messages\",\n        context.getString(R.string.messages_channel),\n        NotificationManager.IMPORTANCE_DEFAULT\n    )\n    context.getSystemService(NotificationManager::class.java)\n        .createNotificationChannel(channel)\n}\n// Before posting: check permission and channel/app settings.\n// Notification taps use explicit, appropriately immutable PendingIntents.",
+  "language": "kotlin",
+  "pitfall": "Channel importance cannot simply be raised after creation; users control it. Push delivery may be delayed or duplicated, so reconcile using stable server IDs.",
+  "question": "What should happen after receiving a “new message” push?",
+  "answer": "Reconcile the inbox through the repository and deduplicate by message ID. Keep payloads minimal and avoid putting sensitive content on the lock screen by default.",
+  "quiz": {
+    "question": "Can push delivery replace a durable inbox API?",
+    "options": [
+      "Yes, it is an exactly-once log",
+      "No, use it as a signal to reconcile",
+      "Only if the payload is large"
+    ],
+    "correct": 1,
+    "explanation": "Offline devices and retries make reconciliation necessary; push alone cannot guarantee a complete history."
+  }
+},
+{
+  "id": "accessibility-localization",
+  "title": "Accessibility & localization",
+  "summary": "Provide semantic roles and states, meaningful labels and scalable text. Put user-visible strings in resources; support plurals, locale-aware formatting, RTL and different text lengths.",
+  "useCase": "Make a settings toggle understandable to TalkBack and usable with large fonts.",
+  "code": "@Composable\nfun CompactSetting(enabled: Boolean, onChange: (Boolean) -> Unit) {\n    Row(Modifier.fillMaxWidth().toggleable(\n        value = enabled, role = Role.Switch,\n        onValueChange = onChange\n    ).padding(16.dp)) {\n        Text(stringResource(R.string.compact_layout),\n            modifier = Modifier.weight(1f))\n        Switch(checked = enabled, onCheckedChange = null)\n    }\n}\n// One accessible row action; child Switch delegates interaction.",
+  "language": "kotlin",
+  "pitfall": "Do not label every decorative icon or concatenate translated sentences. Test with TalkBack, large fonts and RTL; content descriptions should not duplicate visible text needlessly.",
+  "question": "Why use start/end instead of left/right spacing?",
+  "answer": "Start/end follow layout direction, so navigation and alignment adapt naturally to right-to-left languages. Some content, such as media progress, still needs domain-specific treatment.",
+  "quiz": {
+    "question": "What improves accessibility for this toggle row?",
+    "options": [
+      "Two competing click actions",
+      "One labeled action with switch semantics",
+      "Removing the visible label"
+    ],
+    "correct": 1,
+    "explanation": "A unified control communicates both purpose and checked state without redundant interaction targets."
+  }
+},
+{
+  "id": "runtime-threads",
+  "title": "Processes, ART, Binder & the main looper",
+  "summary": "An app usually runs components in one Linux process. ART executes DEX code using compilation/runtime services and garbage collection. Binder provides IPC. The main thread’s Looper dispatches queued callbacks; a Handler posts to a chosen Looper.",
+  "useCase": "Explain why posting expensive work to the main Handler still causes jank or ANRs.",
+  "language": "kotlin",
+  "code": "val mainHandler = Handler(Looper.getMainLooper())\nval update = Runnable { renderStatus(\"Ready\") }\nmainHandler.post(update) // Executes on main; does not create a thread.\n// If the owning UI is destroyed before delivery:\nmainHandler.removeCallbacks(update)\n\n// Prefer lifecycle-scoped coroutines for new screen-owned async work.\n// Blocking Binder calls can wait for another process; avoid on main.\n// renderStatus is an app-specific UI callback.",
+  "pitfall": "A process-wide singleton is not shared across processes and disappears on process death. Binder calls can block or arrive concurrently; avoid large IPC payloads and protect shared state.",
+  "question": "Does garbage collection prevent memory leaks?",
+  "answer": "No. GC reclaims unreachable objects. A listener or singleton can keep an obsolete Activity reachable indefinitely; release references at the owner’s lifecycle boundary.",
+  "quiz": {
+    "question": "Handler(Looper.getMainLooper()).post { heavyWork() } runs where?",
+    "options": [
+      "A newly created worker thread",
+      "The main thread when its queue reaches the callback",
+      "A separate Linux process"
+    ],
+    "correct": 1,
+    "explanation": "A Handler targets its Looper’s existing thread. Posting changes scheduling, not the execution thread."
+  }
+}
   ]
 }, {
   id: 'design', title: 'Mobile System Design Primer', subtitle: 'Reason about data, boundaries and unreliable networks.', icon: '◇',
