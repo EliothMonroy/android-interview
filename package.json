@@ -1,0 +1,1 @@
+{"name":"android-interview-field-guide","version":"1.0.0","private":true,"scripts":{"build":"node scripts/build.mjs","test":"node --test tests/*.test.mjs","start":"python3 -m http.server 4173"},"devDependencies":{"jsdom":"^30.0.1"}}
