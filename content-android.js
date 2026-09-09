@@ -7,6 +7,7 @@ window.PRIMERS = [...(window.PRIMERS || []), {
     {title: 'Save UI states', url: 'https://developer.android.com/topic/libraries/architecture/saving-states'},
     {title: 'Adaptive apps', url: 'https://developer.android.com/develop/ui/compose/build-adaptive-apps'},
     {title: 'Vector drawables', url: 'https://developer.android.com/develop/ui/views/graphics/vector-drawable-resources'},
+    {title: 'Unique work policies', url: 'https://developer.android.com/reference/androidx/work/ExistingWorkPolicy'},
     {title: 'WorkManager', url: 'https://developer.android.com/develop/background-work/background-tasks/persistent/getting-started'},
     {title: 'Performance guide', url: 'https://developer.android.com/topic/performance/overview'}
 ,
@@ -111,11 +112,12 @@ fun BookmarkAction(onClick: () -> Unit) {
         .setRequiredNetworkType(NetworkType.CONNECTED).build())
     .build()
 WorkManager.getInstance(context).enqueueUniqueWork(
-    "sync", ExistingWorkPolicy.KEEP, request
+    "sync", ExistingWorkPolicy.APPEND_OR_REPLACE, request
 )
 // SyncWorker extends CoroutineWorker; retry transient failures.
-// The worker must re-read durable pending operations.`,
-      pitfall: 'WorkManager does not promise exact execution time. A connected network can still fail, and retries require idempotent operations.', question: 'Should a search-as-you-type request use WorkManager?', answer: 'Usually no. Use a lifecycle-scoped coroutine with debounce and cancellation. Persistent scheduling would outlive the immediate interaction.', quiz: {question: 'Which work fits WorkManager?', options: ['An exact animation frame', 'A durable queued upload', 'Every keystroke search'], correct: 1, explanation: 'Queued uploads benefit from persistent scheduling, network constraints and retry support.'}},
+// Each trigger appends a drain; failed/cancelled chains are replaced.
+// Drain durable operations idempotently; reconcile at startup too.`,
+      pitfall: 'KEEP ignores a trigger while work is unfinished, so an edit after the final outbox read can miss scheduling. APPEND_OR_REPLACE queues another drain but can build a backlog; coalesce high-rate edits deliberately. Scheduling is not atomic with a Room write: reconcile pending operations after interruption. WorkManager does not promise exact timing.', question: 'Should a search-as-you-type request use WorkManager?', answer: 'Usually no. Use a lifecycle-scoped coroutine with debounce and cancellation. Persistent scheduling would outlive the immediate interaction.', quiz: {question: 'Which work fits WorkManager?', options: ['An exact animation frame', 'A durable queued upload', 'Every keystroke search'], correct: 1, explanation: 'Queued uploads benefit from persistent scheduling, network constraints and retry support.'}},
     {id: 'performance-testing', title: 'Performance & testing', summary: 'Measure startup and frame timing before optimizing. Keep blocking I/O off the main thread, use lazy lists with stable keys, and test logic separately from UI behavior.', useCase: 'Diagnose a stuttering feed and verify that retry remains usable.', language: 'kotlin',
       code: `@Composable
 fun Feed(items: List<Article>) {

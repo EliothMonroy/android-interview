@@ -39,3 +39,12 @@ The second review targeted topics previously mentioned without enough implementa
 These additions deepen common interview material; they do not change the scope into an exhaustive reference for every Android specialty. The same interactive lesson format, saved review IDs and offline behavior remain in place.
 
 The second pass adds 14 lessons (99 total). It also fixes three practice snippets by placing executable checks inside `main()`, so they use ordinary Kotlin-file syntax rather than implicitly requiring a Kotlin script. Nine automated site checks pass; Kotlin compilation remains unverified.
+
+## Third pass: correctness, not expansion
+
+All 99 lessons were reviewed again. No additional general-interview lessons were justified. Two examples were corrected:
+
+- `algorithms-dfs` now stores an iterator for each active vertex. The earlier eager-neighbor marking counted reachable vertices correctly, but could skip an unprocessed sibling while descending and therefore did not preserve recursive DFS order. The frame stack pauses each parent until the child finishes, following the [Princeton nonrecursive DFS reference](https://algs4.cs.princeton.edu/41graph/NonrecursiveDFS.java.html).
+- `background` now demonstrates `APPEND_OR_REPLACE` for queued outbox drains and explains its backlog tradeoff. `KEEP` ignores a new trigger while work is unfinished, which can miss an edit arriving after the worker's final outbox read. The lesson also explains the database-to-scheduler crash gap and reconciliation. See [WorkManager policy semantics](https://developer.android.com/reference/androidx/work/ExistingWorkPolicy).
+
+The count remains 99. Review completion still does not establish Kotlin compilation, actual Android scheduling behavior, or interview readiness.

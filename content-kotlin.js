@@ -259,7 +259,8 @@ fun topK(values: IntArray, k: Int): List<Int> {
     id: 'algorithms', title: 'Algorithms Primer', subtitle: 'Recognize the pattern. Explain the tradeoff.', icon: '⌘',
     sources: [
       { title: 'Princeton: algorithm costs', url: 'https://algs4.cs.princeton.edu/cheatsheet/' },
-      { title: 'Kotlin: ordering', url: 'https://kotlinlang.org/docs/collection-ordering.html' }
+      { title: 'Kotlin: ordering', url: 'https://kotlinlang.org/docs/collection-ordering.html' },
+      { title: 'Princeton: nonrecursive DFS', url: 'https://algs4.cs.princeton.edu/41graph/NonrecursiveDFS.java.html' }
     ],
     lessons: [
       {
@@ -363,25 +364,30 @@ fun topK(values: IntArray, k: Int): List<Int> {
         code: `fun reachable(graph: List<List<Int>>, start: Int): Int {
     require(start in graph.indices)
     val seen = BooleanArray(graph.size)
-    val stack = ArrayDeque<Int>()
+    val frames = ArrayDeque<Iterator<Int>>()
     seen[start] = true
-    stack.addLast(start)
-    var count = 0
-    while (stack.isNotEmpty()) {
-        val node = stack.removeLast()
-        count++
-        for (next in graph[node]) if (!seen[next]) {
-            seen[next] = true
-            stack.addLast(next)
+    frames.addLast(graph[start].iterator())
+    var count = 1
+    while (frames.isNotEmpty()) {
+        val neighbors = frames.last()
+        if (!neighbors.hasNext()) {
+            frames.removeLast()
+            continue
         }
+        val next = neighbors.next()
+        if (seen[next]) continue
+        seen[next] = true
+        count++
+        frames.addLast(graph[next].iterator())
     }
     return count
 }
+// Each parent pauses while its child is explored, as in recursion.
 // Valid vertex IDs required. O(V + E) time, O(V) extra space.`,
         pitfall: 'Reachability needs visited state on cyclic graphs. Directed cycle detection additionally needs active-path state, not just seen.',
         question: 'Why choose an explicit stack over recursive DFS?',
         answer: 'An explicit stack avoids call-stack overflow and makes memory use easier to control on large inputs.',
-        quiz: { question: 'What makes this traversal depth-first rather than breadth-first?', options: ['BooleanArray', 'removeLast()', 'The adjacency list'], correct: 1, explanation: 'The stack processes the most recently added pending vertex first.' }
+        quiz: { question: 'Why retain an iterator for each active vertex?', options: ['To sort the graph', 'To resume the parent after fully exploring a child', 'To avoid tracking visited vertices'], correct: 1, explanation: 'A frame preserves the parent’s next neighbor while descent explores the current child. This mirrors recursive DFS.' }
       },
       {
         id: 'algorithms-dp', title: 'Dynamic programming',

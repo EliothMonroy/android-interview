@@ -1,5 +1,5 @@
-const CACHE = 'android-field-guide-v3';
-const ASSETS = ['./','./index.html','./styles.css?v=3','./app.js?v=3','./content-kotlin.js?v=3','./content-android.js?v=3','./content-design-extra.js?v=3','./content-interview-extra.js?v=3','./content-kotlin-review.js?v=3','./content-android-review.js?v=3','./content-design-review.js?v=3','./icon.svg','./manifest.webmanifest'];
+const CACHE = 'android-field-guide-v4';
+const ASSETS = ['./','./index.html','./styles.css?v=4','./app.js?v=4','./content-kotlin.js?v=4','./content-android.js?v=4','./content-design-extra.js?v=4','./content-interview-extra.js?v=4','./content-kotlin-review.js?v=4','./content-android-review.js?v=4','./content-design-review.js?v=4','./icon.svg','./manifest.webmanifest'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('android-field-guide-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{

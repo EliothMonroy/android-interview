@@ -44,7 +44,7 @@ test('service worker caches every local dependency and falls back offline',async
  for(const file of [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map(x=>x[1]).filter(x=>!x.startsWith('http')))assert.ok(added.includes(`./${file}`));
  handlers.activate({waitUntil:p=>pending=p});await pending;assert.deepEqual(deleted,['android-field-guide-old']);
  cacheMap.set('./index.html','offline page');handlers.fetch({request:{url:'https://guide.test/',method:'GET',mode:'navigate'},respondWith:p=>pending=p});assert.equal(await pending,'offline page');
- cacheMap.set('https://guide.test/app.js?v=3','cached js');handlers.fetch({request:{url:'https://guide.test/app.js?v=3',method:'GET',mode:'cors'},respondWith:p=>pending=p});assert.equal(await pending,'cached js');
+ cacheMap.set('https://guide.test/app.js?v=4','cached js');handlers.fetch({request:{url:'https://guide.test/app.js?v=4',method:'GET',mode:'cors'},respondWith:p=>pending=p});assert.equal(await pending,'cached js');
 });
 test('skip link preserves current lesson and navigation focuses new heading',()=>{
  const {w,d,close}=boot({},'#android/compose');try{const link=d.querySelector('.skip-link');link.click();assert.equal(w.location.hash,'#android/compose');assert.equal(d.activeElement.id,'main');go(w,'design/rest');assert.equal(d.activeElement,d.querySelector('.lesson-heading'));}finally{close();}
