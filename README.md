@@ -1,0 +1,33 @@
+# Android Interview Field Guide
+
+A mobile-first, dependency-free study website with 32 concise lessons across Kotlin, data structures, algorithms, Android (Views and Compose), and mobile system design.
+
+Each lesson has a Kotlin example, a practical use case, a pitfall, a revealable interview answer, and an immediate-feedback quiz. The algorithms section also includes a step-through binary search lab. Reviewed lessons and light/dark/system preferences stay in local browser storage.
+
+## Run offline
+
+Open `index.html` directly in a browser. Keep the sibling CSS and JavaScript files together. No installation, CDN, API, or network is required to study. Copying code may require manual selection when clipboard permissions are unavailable.
+
+For service-worker caching and a local preview:
+
+```sh
+python3 -m http.server 4173 --bind 127.0.0.1
+```
+
+Open http://127.0.0.1:4173 and wait for “Ready for offline study.” The service worker needs localhost or HTTPS and one successful load before offline visits. Reference links need internet. Browser storage eviction or clearing site data removes cached files and progress. Keep a local copy for reliable long-term offline access. Private hosted authentication may require connectivity; the local copy does not.
+
+## Develop and validate
+
+Node is only needed for development checks and packaging. The shipped site remains plain HTML, CSS, and JavaScript.
+
+```sh
+npm ci
+npm test
+npm run build
+```
+
+`dist/` contains only the eight public assets. `jsdom` is a development-only test dependency. Tests execute all 32 lessons, quiz answers, theme changes, local progress, navigation, binary-search outcomes, and service-worker cache/fallback contracts. They do not replace real-device visual or offline-browser testing. Kotlin examples are statically reviewed teaching snippets, not an executable Android project; Android examples omit imports and app-specific setup.
+
+Content lives in `content-kotlin.js` and `content-android.js`; official references appear under each primer. Keep section/lesson IDs stable to preserve saved progress. Bump the cache name in `sw.js` whenever shipped assets change. Serve all assets together. No analytics or remote calls are made by the study app.
+
+On browsers exposing `document.modelContext`, an optional `set_current_lesson_reviewed` tool mirrors the visible review button. Its contract is tested with a mock registry; registration in a live WebMCP-enabled browser has not been verified.

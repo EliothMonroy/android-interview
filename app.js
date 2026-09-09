@@ -77,7 +77,24 @@ function applyTheme(){document.documentElement.dataset.theme=preference==='syste
 $('theme').onchange=()=>{preference=$('theme').value;try{localStorage.setItem('aifg-theme',preference);}catch{notify('Theme will last for this visit.');}applyTheme();};
 media.addEventListener('change',applyTheme);applyTheme();
 $('reset-progress').onclick=()=>{if(confirm('Reset all reviewed lessons on this device?')){completed.clear();feedback={};write('aifg-completed',[]);render();notify('Progress reset.');}};
-window.addEventListener('hashchange',route);route();
+function focusLesson() { const heading=document.querySelector('.lesson-heading'); heading.setAttribute('tabindex','-1'); heading.focus(); }
+document.querySelector('.skip-link').onclick=event=>{event.preventDefault();$('main').focus();};
+window.addEventListener('hashchange',()=>{route();focusLesson();});route();
+// Optional agent access uses the same local reviewed state as the visible UI.
+if(document.modelContext?.registerTool) {
+ try { Promise.resolve(document.modelContext.registerTool({
+  name:'set_current_lesson_reviewed',
+  description:'Set whether the currently visible lesson has been reviewed on this device.',
+  inputSchema:{type:'object',properties:{reviewed:{type:'boolean'}},required:['reviewed'],additionalProperties:false},
+  annotations:{readOnlyHint:false,untrustedContentHint:false},
+  execute(input){
+   if(!input || typeof input.reviewed!=='boolean' || Object.keys(input).some(k=>k!=='reviewed')) throw new Error('Provide only a boolean reviewed value.');
+   const key=keyFor(section,lesson);
+   if(completed.has(key)!==input.reviewed) $('mark').click();
+   return {lesson:key,reviewed:completed.has(key)};
+  }
+ })).catch(()=>{}); } catch {}
+}
 if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
  navigator.serviceWorker.register('./sw.js').then(async registration=>{
   await navigator.serviceWorker.ready;
