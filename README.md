@@ -10,6 +10,8 @@ Each lesson has a Kotlin example, a practical use case, a pitfall, a revealable 
 
 ## Run offline
 
+In the web app, select **Kotlin Primer**, then **Open coroutines study guide** near the top. The PDF opens in a new tab and is available offline after “Ready for offline study.” Keep the `docs/` directory with any local copy.
+
 Open `index.html` directly in a browser. Keep the sibling CSS and JavaScript files together. No installation, CDN, API, or network is required to study. Copying code may require manual selection when clipboard permissions are unavailable.
 
 For service-worker caching and a local preview:
@@ -30,7 +32,7 @@ npm test
 npm run build
 ```
 
-`dist/` contains only the thirteen public assets. `jsdom` is a development-only test dependency. Tests execute all 99 lessons, quiz answers, theme changes, local progress, navigation, binary-search outcomes, and service-worker cache/fallback contracts. They do not replace real-device visual or offline-browser testing. Kotlin examples are statically reviewed teaching snippets, not an executable Android project; Android examples omit imports and app-specific setup.
+`dist/` contains only the fourteen public assets, including the PDF. `jsdom` is a development-only test dependency. Tests execute all 99 lessons, quiz answers, theme changes, local progress, navigation, binary-search outcomes, and service-worker cache/fallback contracts, and PDF link/packaging/offline behavior. They do not replace real-device visual or offline-browser testing. Kotlin examples are statically reviewed teaching snippets, not an executable Android project; Android examples omit imports and app-specific setup.
 
 Content lives in `content-kotlin.js` and `content-android.js`; official references appear under each primer. Keep section/lesson IDs stable to preserve saved progress. Bump the cache name in `sw.js` and the asset URL version in both `index.html` and the worker asset list whenever shipped assets change. Versioned URLs prevent an older cache from hiding new content. Serve all assets together. No analytics or remote calls are made by the study app.
 

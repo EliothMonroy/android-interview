@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
 import vm from 'node:vm';
+import { execFileSync } from 'node:child_process';
 const html=await readFile('index.html','utf8');
 const code=await Promise.all(['content-kotlin.js','content-android.js','content-design-extra.js','content-interview-extra.js','content-kotlin-review.js','content-android-review.js','content-design-review.js','app.js'].map(f=>readFile(f,'utf8')));
 function boot(saved={},hash='') {
@@ -35,6 +36,32 @@ test('binary search completes for found and absent targets and restarts',()=>{
 test('malformed saved progress cannot prevent startup',()=>{
  for(const value of ['oops','{}','null','42','"text"']){const {d,close}=boot({'aifg-completed':value});assert.ok(d.querySelector('h2'));close();}
 });
+test('Kotlin lessons expose the packaged coroutines PDF in a new tab',async()=>{
+ const {w,d,close}=boot({},'#kotlin/kotlin-null');
+ try {
+  for(const lesson of w.PRIMERS.find(s=>s.id==='kotlin').lessons){
+   go(w,`kotlin/${lesson.id}`);
+   const link=d.querySelector('a[href="docs/study-guides/kotlin-coroutines-study-guide.pdf"]');
+   assert.ok(link,'Kotlin Primer must link to the study guide');
+   assert.equal(link.textContent,'Open coroutines study guide');
+   assert.equal(link.target,'_blank');assert.ok(link.rel.split(' ').includes('noopener'));
+  }
+  for(const section of ['structures','algorithms','android','design']){go(w,section);assert.equal(d.querySelector('a[href="docs/study-guides/kotlin-coroutines-study-guide.pdf"]'),null);}
+ } finally {close();}
+ execFileSync(process.execPath,['scripts/build.mjs']);
+ assert.deepEqual(await readFile('dist/docs/study-guides/kotlin-coroutines-study-guide.pdf'),await readFile('docs/study-guides/kotlin-coroutines-study-guide.pdf'));
+});
+test('offline PDF navigation serves the document instead of the app shell',async()=>{
+ const handlers={};const pdfURL='https://guide.test/docs/study-guides/kotlin-coroutines-study-guide.pdf';let assets=[];
+ const document=new Response(await readFile('docs/study-guides/kotlin-coroutines-study-guide.pdf'),{headers:{'Content-Type':'application/pdf'}});
+ const scope={self:{location:{origin:'https://guide.test'},registration:{scope:'https://guide.test/'},addEventListener:(t,f)=>handlers[t]=f,skipWaiting:async()=>{}},caches:{open:async()=>({addAll:async a=>{assets=a;}}),match:async r=>r.url===pdfURL?document:new Response('<html>App shell</html>')},fetch:async()=>{throw new Error('offline');},URL};
+ vm.runInNewContext(await readFile('sw.js','utf8'),scope);
+ let pending;handlers.install({waitUntil:p=>pending=p});await pending;
+ assert.ok(assets.includes('./docs/study-guides/kotlin-coroutines-study-guide.pdf'),'PDF must be available after offline setup');
+ handlers.fetch({request:{url:pdfURL,method:'GET',mode:'navigate'},respondWith:p=>pending=p});
+ const response=await pending;assert.equal(response.headers.get('Content-Type'),'application/pdf');
+ assert.deepEqual(Buffer.from(await response.arrayBuffer()),await readFile('docs/study-guides/kotlin-coroutines-study-guide.pdf'));
+});
 test('service worker caches every local dependency and falls back offline',async()=>{
  const handlers={};const cacheMap=new Map();let added=[];const deleted=[];
  const scope={self:{location:{origin:'https://guide.test'},registration:{scope:'https://guide.test/'},addEventListener:(t,f)=>handlers[t]=f,skipWaiting:async()=>{},clients:{claim:async()=>{}}},caches:{open:async()=>({addAll:async assets=>{added=assets;}}),keys:async()=>['android-field-guide-old','unrelated'],delete:async k=>deleted.push(k),match:async k=>cacheMap.get(typeof k==='string'?k:k.url)},fetch:async()=>{throw new Error('offline');},URL};
@@ -44,7 +71,7 @@ test('service worker caches every local dependency and falls back offline',async
  for(const file of [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map(x=>x[1]).filter(x=>!x.startsWith('http')))assert.ok(added.includes(`./${file}`));
  handlers.activate({waitUntil:p=>pending=p});await pending;assert.deepEqual(deleted,['android-field-guide-old']);
  cacheMap.set('./index.html','offline page');handlers.fetch({request:{url:'https://guide.test/',method:'GET',mode:'navigate'},respondWith:p=>pending=p});assert.equal(await pending,'offline page');
- cacheMap.set('https://guide.test/app.js?v=4','cached js');handlers.fetch({request:{url:'https://guide.test/app.js?v=4',method:'GET',mode:'cors'},respondWith:p=>pending=p});assert.equal(await pending,'cached js');
+ cacheMap.set('https://guide.test/app.js?v=5','cached js');handlers.fetch({request:{url:'https://guide.test/app.js?v=5',method:'GET',mode:'cors'},respondWith:p=>pending=p});assert.equal(await pending,'cached js');
 });
 test('skip link preserves current lesson and navigation focuses new heading',()=>{
  const {w,d,close}=boot({},'#android/compose');try{const link=d.querySelector('.skip-link');link.click();assert.equal(w.location.hash,'#android/compose');assert.equal(d.activeElement.id,'main');go(w,'design/rest');assert.equal(d.activeElement,d.querySelector('.lesson-heading'));}finally{close();}
