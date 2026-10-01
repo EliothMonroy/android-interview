@@ -4,6 +4,10 @@ A mobile-first, dependency-free study website with 99 concise lessons across Kot
 
 Each lesson has a Kotlin example, a practical use case, a pitfall, a revealable interview answer, and an immediate-feedback quiz. The algorithms section also includes a step-through binary search lab. Reviewed lessons and light/dark/system preferences stay in local browser storage.
 
+## Study guides
+
+- [Kotlin coroutines study guide (PDF)](docs/study-guides/kotlin-coroutines-study-guide.pdf) - A 42-page guide to suspension, structured concurrency, cancellation, Flow, Android lifecycles, and testing, with a five-week study plan and worked exercises.
+
 ## Run offline
 
 Open `index.html` directly in a browser. Keep the sibling CSS and JavaScript files together. No installation, CDN, API, or network is required to study. Copying code may require manual selection when clipboard permissions are unavailable.
