@@ -1,6 +1,6 @@
 (() => {
 'use strict';
-const sections = ['kotlin','structures','algorithms','android','design'].map(id => window.PRIMERS.find(s => s.id === id));
+const sections = ['kotlin','coroutines','structures','algorithms','android','design'].map(id => window.PRIMERS.find(s => s.id === id));
 const $ = id => document.getElementById(id);
 const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const read = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } };
@@ -19,31 +19,36 @@ function route() {
 }
 function navigate(s,l) { const hash=`#${s.id}/${l.id}`; if(location.hash===hash) render(); else location.hash=hash; }
 function renderNav() {
- $('navigation').innerHTML=sections.map((s,i)=>`<button class="nav-item ${s===section?'active':''}" data-section="${s.id}" ${s===section?'aria-current="page"':''}><span class="nav-icon" aria-hidden="true">${['Kt','{ }','↗','A','◈'][i]}</span><span class="nav-text">${escape(s.title)}<small>${s.lessons.length} lessons</small></span><span class="nav-count">${String(i+1).padStart(2,'0')}</span></button>`).join('');
+ $('navigation').innerHTML=sections.map((s,i)=>`<button class="nav-item ${s===section?'active':''}" data-section="${s.id}" ${s===section?'aria-current="page"':''}><span class="nav-icon" aria-hidden="true">${({kotlin:'Kt',coroutines:'Co',structures:'{ }',algorithms:'↗',android:'A',design:'◈'})[s.id]}</span><span class="nav-text">${escape(s.title)}<small>${s.lessons.length} ${s.type==='course'?'chapters':'lessons'}</small></span><span class="nav-count">${String(i+1).padStart(2,'0')}</span></button>`).join('');
  $('navigation').querySelectorAll('button').forEach(b=>b.onclick=()=>{const s=sections.find(s=>s.id===b.dataset.section);navigate(s,s.lessons[0]);});
 }
 function render() {
  renderNav();
  const index=section.lessons.indexOf(lesson), done=section.lessons.filter(l=>completed.has(keyFor(section,l))).length;
  const isDone=completed.has(keyFor(section,lesson));
+ const isCourse=section.type==='course';
  $('current-section').textContent=section.title;
  document.title=`${lesson.title} · Android Interview`;
- $('main').innerHTML=`<div class="eyebrow">PRIMER ${String(sections.indexOf(section)+1).padStart(2,'0')} <span> / </span> ANDROID INTERVIEW</div>
+ $('main').innerHTML=`<div class="eyebrow">${isCourse?'COURSE':'PRIMER'} ${String(sections.indexOf(section)+1).padStart(2,'0')} <span> / </span> ANDROID INTERVIEW</div>
  <div class="section-heading"><h1>${escape(section.title)}</h1><p>${escape(section.subtitle)}</p></div>
- ${section.id==='kotlin'?`<div class="study-resource"><a class="button" href="docs/study-guides/kotlin-coroutines-study-guide.pdf" target="_blank" rel="noopener noreferrer">Open coroutines study guide</a><span class="muted">42-page PDF · Opens in a new tab</span></div>`:''}
- <p class="study-note">Use the quizzes for recall. Before an interview, write the examples from scratch, explain tradeoffs, and complete the practice lessons.</p>
- <div class="section-meta"><span>${section.lessons.length} bite-sized lessons</span><span>${done} / ${section.lessons.length} reviewed</span></div><div class="progress-track" role="progressbar" aria-label="Lessons reviewed" aria-valuemin="0" aria-valuemax="${section.lessons.length}" aria-valuenow="${done}"><div style="width:${done/section.lessons.length*100}%"></div></div>
+ ${section.id==='kotlin'||isCourse?`<div class="study-resource">${section.id==='kotlin'?'<a class="button" href="#coroutines">Study Kotlin Coroutines</a>':''}<a class="button" href="docs/study-guides/kotlin-coroutines-study-guide.pdf" target="_blank" rel="noopener noreferrer">${isCourse?'Download source PDF':'Open coroutines study guide'}</a><span class="muted">42-page PDF · Opens in a new tab</span></div>`:''}
+ <p class="study-note">${isCourse?'Complete web edition of the guide reviewed on 30 September 2026. Follow the five-week schedule, run the examples, and reveal checkpoint answers after making your prediction. Original page references link to the matching web chapter.':'Use the quizzes for recall. Before an interview, write the examples from scratch, explain tradeoffs, and complete the practice lessons.'}</p>
+ <div class="section-meta"><span>${section.lessons.length} ${isCourse?'complete chapters':'bite-sized lessons'}</span><span>${done} / ${section.lessons.length} reviewed</span></div><div class="progress-track" role="progressbar" aria-label="${isCourse?'Chapters':'Lessons'} reviewed" aria-valuemin="0" aria-valuemax="${section.lessons.length}" aria-valuenow="${done}"><div style="width:${done/section.lessons.length*100}%"></div></div>
+ ${isCourse?`<label class="chapter-picker">Jump to chapter <select id="chapter-picker">${section.lessons.map((l,i)=>`<option value="${l.id}" ${l===lesson?'selected':''}>${String(i+1).padStart(2,'0')} · ${escape(l.stage)} · ${escape(l.title)}</option>`).join('')}</select></label>`:''}
  <div class="lesson-layout"><nav class="lesson-list" aria-label="Lessons">${section.lessons.map((l,i)=>`<button class="lesson-tab ${l===lesson?'active':''}" data-lesson="${l.id}" ${l===lesson?'aria-current="true"':''}><span class="lesson-number">${String(i+1).padStart(2,'0')}</span><span class="lesson-title">${escape(l.title)}</span><span class="lesson-status" aria-label="${completed.has(keyFor(section,l))?'Reviewed':'Not reviewed'}">${completed.has(keyFor(section,l))?'✓':'·'}</span></button>`).join('')}</nav>
- <article class="lesson-card"><div class="lesson-topline"><span class="badge">THE CONCEPT</span><span>LESSON ${String(index+1).padStart(2,'0')}</span></div><h2 class="lesson-heading">${escape(lesson.title)}</h2><p class="summary">${escape(lesson.summary)}</p><div class="use-case"><strong>When to use it</strong><p>${escape(lesson.useCase)}</p></div>
- <div class="code-header"><span>KOTLIN <span class="muted">/ example snippet</span></span><button class="copy-button" id="copy-code">Copy code</button></div><pre tabindex="0" aria-label="Kotlin example"><code>${highlight(lesson.code)}</code></pre>
+ <article class="lesson-card ${isCourse?'course-lesson':''}">${isCourse?window.CoroutineCourse.render(lesson,highlight):`<div class="lesson-topline"><span class="badge">THE CONCEPT</span><span>LESSON ${String(index+1).padStart(2,'0')}</span></div><h2 class="lesson-heading">${escape(lesson.title)}</h2><p class="summary">${escape(lesson.summary)}</p><div class="use-case"><strong>When to use it</strong><p>${escape(lesson.useCase)}</p></div>
+ <div class="code-header"><span>KOTLIN <span class="muted">/ example snippet</span></span><button class="copy-button" id="copy-code" data-copy-code="0">Copy code</button></div><pre tabindex="0" aria-label="Kotlin example"><code>${highlight(lesson.code)}</code></pre>
  <p class="pitfall"><strong>Watch out</strong> ${escape(lesson.pitfall)}</p>
  <details class="answer-card"><summary><span><span class="eyebrow">INTERVIEW PROMPT</span>${escape(lesson.question)}</span><span aria-hidden="true">+</span></summary><p>${escape(lesson.answer)}</p></details>
  ${section.id==='algorithms'?visualizerMarkup():''}
- <section class="quiz-card" aria-label="Knowledge check"><div class="eyebrow">CHECK YOUR UNDERSTANDING</div><h3>${escape(lesson.quiz.question)}</h3><div class="quiz-options">${lesson.quiz.options.map((o,i)=>`<button class="quiz-option" data-answer="${i}"><span>${String.fromCharCode(65+i)}</span>${escape(o)}</button>`).join('')}</div><p class="quiz-feedback" id="quiz-feedback" aria-live="polite"></p></section>
- <div class="lesson-actions"><button class="mark-button ${isDone?'reviewed':''}" id="mark" aria-pressed="${isDone}">${isDone?'✓ Reviewed':'Mark as reviewed'}</button><button class="next-button" id="next">${index===section.lessons.length-1?'Next primer':'Next lesson'} <span aria-hidden="true">→</span></button></div></article></div>
+ <section class="quiz-card" aria-label="Knowledge check"><div class="eyebrow">CHECK YOUR UNDERSTANDING</div><h3>${escape(lesson.quiz.question)}</h3><div class="quiz-options">${lesson.quiz.options.map((o,i)=>`<button class="quiz-option" data-answer="${i}"><span>${String.fromCharCode(65+i)}</span>${escape(o)}</button>`).join('')}</div><p class="quiz-feedback" id="quiz-feedback" aria-live="polite"></p></section>`}
+ <div class="lesson-actions"><button class="mark-button ${isDone?'reviewed':''}" id="mark" aria-pressed="${isDone}">${isDone?'✓ Reviewed':'Mark as reviewed'}</button>${isCourse?`<button class="next-button" id="previous" ${index===0?'disabled':''}>← Previous chapter</button>`:''}<button class="next-button" id="next">${index===section.lessons.length-1?'Next section':isCourse?'Next chapter':'Next lesson'} <span aria-hidden="true">→</span></button></div></article></div>
  <div class="section-sources"><span>GO DEEPER</span>${(section.sources||[]).map(s=>`<a href="${escape(s.url)}" target="_blank" rel="noopener noreferrer">${escape(s.title)} ↗</a>`).join('')}<small>Reference links require internet. Examples are focused snippets; Android examples assume the relevant project setup and imports.</small></div>`;
  $('main').querySelectorAll('[data-lesson]').forEach(b=>b.onclick=()=>navigate(section,section.lessons.find(l=>l.id===b.dataset.lesson)));
- $('copy-code').onclick=async()=>{try {await navigator.clipboard.writeText(lesson.code);notify('Kotlin example copied.');} catch {notify('Select the code and use your device’s Copy command.');}};
+ const examples=isCourse?lesson.blocks.filter(b=>b.type==='code').map(b=>b.code):[lesson.code];
+ $('main').querySelectorAll('[data-copy-code]').forEach(button=>button.onclick=async()=>{try {await navigator.clipboard.writeText(examples[Number(button.dataset.copyCode)]);notify('Kotlin example copied.');} catch {notify('Select the code and use your device’s Copy command.');}});
+ if($('chapter-picker'))$('chapter-picker').onchange=()=>navigate(section,section.lessons.find(l=>l.id===$('chapter-picker').value));
+ if($('previous'))$('previous').onclick=()=>navigate(section,section.lessons[index-1]);
  $('mark').onclick=()=>{const key=keyFor(section,lesson); completed.has(key)?completed.delete(key):completed.add(key);write('aifg-completed',[...completed]);render();$('mark').focus();};
  $('next').onclick=()=>{if(index<section.lessons.length-1) navigate(section,section.lessons[index+1]);else{const s=sections[(sections.indexOf(section)+1)%sections.length];navigate(s,s.lessons[0]);}};
  $('main').querySelectorAll('[data-answer]').forEach(b=>b.onclick=()=>answer(Number(b.dataset.answer)));

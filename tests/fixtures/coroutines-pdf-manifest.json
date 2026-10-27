@@ -1,0 +1,506 @@
+{
+  "pdfSha256": "5879177006d2e6ba8895297ee637cf90fee21a91713dd139a9a81f1633ebf77f",
+  "normalization": "Remove whitespace only; exclude repeated running footer.",
+  "pages": [
+    {
+      "page": 1,
+      "id": "coroutines-01",
+      "title": "Kotlin coroutines",
+      "textSha256": "ebcb264eb939c75fc6f6245168dc58e58beae8a70fc444c7eb8ac8d92f438885",
+      "codeSha256": [
+        "b161291644074f29a14e962b12c8de2cad8466d91deb0324f0b42f95e162e8bd"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 2,
+      "id": "coroutines-02",
+      "title": "How to use this guide",
+      "textSha256": "c0e669ee5b7b448a76ac9aac558c220a9ae983e174c95bc22bb6f0b26f001247",
+      "codeSha256": [],
+      "tableCount": 1,
+      "links": []
+    },
+    {
+      "page": 3,
+      "id": "coroutines-03",
+      "title": "Set up a small Kotlin lab",
+      "textSha256": "966c1deb7a524044ac1753b9dd7b217c343f7532401577f53b25535c1cbe4e21",
+      "codeSha256": [
+        "d7231d8d65635a18b352a014f8cff60213e60d6af49e9ab46dfa94e9fba5af0f",
+        "70239607a0ccbb97176eeeb6b70a2998467e97ed429c2554fe203b576b322b42"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 4,
+      "id": "coroutines-04",
+      "title": "Read Kotlin syntax confidently",
+      "textSha256": "a75c1bcc91ff1dcb91d4b7f7b84be024e562710d1af4219aa3915a43a4081044",
+      "codeSha256": [
+        "cc85769640e3107217112d47e488b3d2cb6f7f51332a1009c667f90d64861533",
+        "75f99a452b76980b9f238ba70b4bcfba92d7eb9aed7ce2e5996098ed586357ee"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 5,
+      "id": "coroutines-05",
+      "title": "Lambdas, receivers, and generics",
+      "textSha256": "2c08eca09d36e25c96333a1aa579d44a21be2559b6c6b17a2621903b85816fc0",
+      "codeSha256": [
+        "ff89d8ecdaaacbec0ddd0552ba2f5bf6086a2007f48278da1e5543d89439d5d0",
+        "ed411ae0fa96b64783335dac819aa8f44502aede03a446a66e89047a5f9d42c9"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 6,
+      "id": "coroutines-06",
+      "title": "Threads, blocking, and concurrency",
+      "textSha256": "4f05ab7f6f5a5a55089989cfe4447c6a4df6220609625e74614f1cb436142b00",
+      "codeSha256": [
+        "7389d3dba8c7d8182f107a57a479c59428ca4879cc0551ee91799c0efb53be16"
+      ],
+      "tableCount": 1,
+      "links": []
+    },
+    {
+      "page": 7,
+      "id": "coroutines-07",
+      "title": "What suspend does",
+      "textSha256": "0403ac5d7a6cfff096dbe9eab558e5515e63591619e2994bf1227aa692bb822c",
+      "codeSha256": [
+        "ce04b403a8440a721c03174e0781f56036065a4deea6b1f9a81fd561a6ed417a",
+        "549225271a0ef49a2d9321d534823cb1579da02802c6c5fa0631d671edb3d7d9"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 8,
+      "id": "coroutines-08",
+      "title": "Four essential entry points",
+      "textSha256": "f371eeb0316b86168ec6a9c732268156a26ed54bccf163779c192e214586842c",
+      "codeSha256": [
+        "d2f43bf9df1557b8a6d388d07ee1e2fb7d03bee90874431a27caf8124d504149"
+      ],
+      "tableCount": 1,
+      "links": []
+    },
+    {
+      "page": 9,
+      "id": "coroutines-09",
+      "title": "Decode your original program",
+      "textSha256": "7d5471e67a398561f8c4d5f154b1e532f3d1ad6e927650f51d53b19ec071f948",
+      "codeSha256": [
+        "f2d85a92a1509a59c40ddc444766480cb826fe197b6e7b41b483c9728d688789",
+        "7656f9c5a7f2842fd42289f903bfce04e0a25bffb0bbe0d20f224408d1edf72e"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 10,
+      "id": "coroutines-10",
+      "title": "Scope, context, and the Job tree",
+      "textSha256": "6174cf6452586ad71762480ec19afb21618a59cbd7e86be3edbca48f502b5995",
+      "codeSha256": [
+        "b49211141c48588c000c9e865147ab97b042abf517a744a8192e7c75ce65bd86"
+      ],
+      "tableCount": 1,
+      "links": []
+    },
+    {
+      "page": 11,
+      "id": "coroutines-11",
+      "title": "Structured concurrency",
+      "textSha256": "16bdbd7fe3d90208558d60d47ad0cc9974ba8eddab06a996185d9cc7c44ecd82",
+      "codeSha256": [
+        "989a19363f752d48d0fbe9229320f89517032c7051ccd0ddaf0a4b828712b3cf"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 12,
+      "id": "coroutines-12",
+      "title": "Cancellation is cooperative",
+      "textSha256": "690b9a9c3fccd29933239355581e5253e8430f7cd1c10d99c39743a5d02ca902",
+      "codeSha256": [
+        "77dd96fab873231d630ebc14731dcc8a23a7f89403891e6b4246e0e467e33c40",
+        "39248933731d80886e892fd0b2f15cf3e823f0b9b2ffcc9d22269b7909aed767"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 13,
+      "id": "coroutines-13",
+      "title": "Cleanup and deadlines",
+      "textSha256": "035e54da6fe0abaafb4d7f94e01a2c6025d488e48b913f0f6530db1b5ffdf81e",
+      "codeSha256": [
+        "9ceb5b60e3e37e149a7d207ca96670b7a2013878d5b14d7eb55c11c03c10a40a",
+        "6c714c8d35aa00f28574d5e0bb07e5af65d9889546b328cc124124a6a5e1a254"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 14,
+      "id": "coroutines-14",
+      "title": "Exception propagation",
+      "textSha256": "0a753fbed09203850413efc2ba2bf547cce802b47f42ed36f4631682f50b3950",
+      "codeSha256": [
+        "17d3ac1ae10aeb453530774ae0df0d7d6c2c86a86f027399c8bc8120520611b5"
+      ],
+      "tableCount": 1,
+      "links": []
+    },
+    {
+      "page": 15,
+      "id": "coroutines-15",
+      "title": "coroutineScope vs supervisorScope",
+      "textSha256": "5dee67f51490b70db33259a363a07dc48f71880c1d03929be0239cb2c4d12500",
+      "codeSha256": [
+        "157545f2c78852dd2fc1f8131eb0e4bc96d3ac53597e2cc81fafc9fc092f09e9",
+        "11c68fab7bd73ba4e173aba91f30917457dd4dc98a1c087b54f93d0485e7c61e"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 16,
+      "id": "coroutines-16",
+      "title": "Job vs SupervisorJob",
+      "textSha256": "53f71c9e03d4cb69e74665fb55ce9b17238fb3624005004ff3bd9c62a6ba4521",
+      "codeSha256": [
+        "7d50de0c8e787a9b97430850b16d4898fd222d2a8283b263d1aa2f465c6f0339",
+        "4cfc322b675f3acf87f9e4d4b57cc156d581ec6998d70053a817593d52e0e465"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 17,
+      "id": "coroutines-17",
+      "title": "Dispatchers and main safety",
+      "textSha256": "b39aac7d03bbfdb896cb80566ebf01eb3cec4c6a1d2806c886105bcaadc2326e",
+      "codeSha256": [
+        "cdb1d1d66cdd3b116d7c3ed68649bc2bcf7bfe9c981d9fb99b3d1af272577c82",
+        "4978017c282868d0149cd5ec7417542423214f9618e74972edb756a720d8837a"
+      ],
+      "tableCount": 1,
+      "links": []
+    },
+    {
+      "page": 18,
+      "id": "coroutines-18",
+      "title": "async vs withContext",
+      "textSha256": "99d84120fe1798bca8d0c954fc39b29ccb0a07acc4933934b57f179db328b3f3",
+      "codeSha256": [
+        "191a7675075777609b8eaa063453a4324ec526d8e3b040bda0a60f2f8d04793c"
+      ],
+      "tableCount": 1,
+      "links": []
+    },
+    {
+      "page": 19,
+      "id": "coroutines-19",
+      "title": "Model errors intentionally",
+      "textSha256": "16ed5d6e14941b61954195c894f3db743daff6c26caefb62f7ebc35b75d59a3e",
+      "codeSha256": [
+        "7e4da9b7e8105e825d2b4090cbf654790301801a2252ab1a8d9cd720b5aa51c0",
+        "6be3f16cb92628f01c959d9c1f7b37cc4fa40a9f070fbc4d88bfbd85711ac381"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 20,
+      "id": "coroutines-20",
+      "title": "Complete partial-success loader",
+      "textSha256": "c183fa753a4d1391cbf425e17ae596e4050df706198d8ef066167f7286cafbac",
+      "codeSha256": [
+        "f108c44c65230675bf9493f4caace1c95f2f65cf736e83c3a83467391d56792e"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 21,
+      "id": "coroutines-21",
+      "title": "Flow: a sequence over time",
+      "textSha256": "934401bbb1cbf986ef4407c73a9d383227ba50b5ead0ad26f2ff7bd21eabd738",
+      "codeSha256": [
+        "cecd9b2b129f758b308293d4f3a19f7408284420d01f7efb6e796a3a7d9b9963",
+        "241bab71aa3facf6d324f1a41f9ffcea59585ea815f05fc2e4509bada911550b"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 22,
+      "id": "coroutines-22",
+      "title": "Flow operators and errors",
+      "textSha256": "e23fd38614a9616f751c5d225da240d8f67e6d3644edc5ca62ed7402e91adde8",
+      "codeSha256": [
+        "c0030d5813eb20b50a26f81131f0f870773dc394e3e719659893a486680b472d",
+        "bbb59fca38384663ac2816680af9c9ac88a02835108a600f0ddb8e9bd06b51eb"
+      ],
+      "tableCount": 1,
+      "links": []
+    },
+    {
+      "page": 23,
+      "id": "coroutines-23",
+      "title": "StateFlow: the current state",
+      "textSha256": "5176b3f27d6be3487cd89250bdc509592d0b75346ea7e8139b242904eb40fa63",
+      "codeSha256": [
+        "b66125ab4bf889b9b6e418910df89fa11753aed57869702bfba7c43058570ff8",
+        "ca23d60385e294c61ea2fa63950261fde9ce7c86208dfabde10bd2f22333996d"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 24,
+      "id": "coroutines-24",
+      "title": "SharedFlow: broadcast values",
+      "textSha256": "b64110f3f9de0ce914957f1f30323d7eba89201b9a72eb251859578f85b963ea",
+      "codeSha256": [
+        "46833603f9d4928c9c018dab2b6fd158c9697175cb1c340eb029a84f8353cbae"
+      ],
+      "tableCount": 1,
+      "links": []
+    },
+    {
+      "page": 25,
+      "id": "coroutines-25",
+      "title": "Android: a ViewModel owns loading",
+      "textSha256": "af2d561aafad82207db56c51939381d132f7fa12b6c8687dfff94d36970bfdf3",
+      "codeSha256": [
+        "f4bf7eb67fa9b2e7ca1454fdbe17b5959bdef8ffd446b99792895db1fa12da07"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 26,
+      "id": "coroutines-26",
+      "title": "Android: collect with the lifecycle",
+      "textSha256": "6b7fa2e4f61ee083d7cba1e544a4a21f72a6f5167b03c4ac88e3947d53b98e7c",
+      "codeSha256": [
+        "dd3726f13904ba15419d50dc2aad60b16c58dd80e1db890c0ecdd5c8b7fe0051",
+        "5bf23dc943f5668d007db1ae24565ba7cb7ce64daa62e12e41b78a48e95eb1e5"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 27,
+      "id": "coroutines-27",
+      "title": "Coroutine tests: virtual time",
+      "textSha256": "def11ba14ad13ec3880888b5350d28f6733fc5b66167f32a65e932c98612f5f7",
+      "codeSha256": [
+        "39348102c34896da0ff415893b4dd6dcf111eda4f0e295ee1735a4fddacf3b1b"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 28,
+      "id": "coroutines-28",
+      "title": "Test the failure policy",
+      "textSha256": "3397066123fc03468538c9c539597986849caf47a6ce1e1b1af41cd3734365bc",
+      "codeSha256": [
+        "fc6aae6d0c60364f5d5f21c8edc0f5db53ed7917ed9b48301cf56d9c46096184"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 29,
+      "id": "coroutines-29",
+      "title": "Five-week schedule / weeks 1-2",
+      "textSha256": "bede9057748c1ff8e62b82e71e588af6e551c32e55f0c7c35d83ef9e7e7097d3",
+      "codeSha256": [],
+      "tableCount": 1,
+      "links": []
+    },
+    {
+      "page": 30,
+      "id": "coroutines-30",
+      "title": "Five-week schedule / weeks 3-4",
+      "textSha256": "7d7263d94eb66442bb92127088bc84d7dfed7eb539ce23fb240533c5b3aa4ace",
+      "codeSha256": [],
+      "tableCount": 1,
+      "links": []
+    },
+    {
+      "page": 31,
+      "id": "coroutines-31",
+      "title": "Five-week schedule / week 5",
+      "textSha256": "63a94e90a267e20f90c54e781f9cadea2afb138d50b8d522c20d83e5873dc690",
+      "codeSha256": [],
+      "tableCount": 1,
+      "links": []
+    },
+    {
+      "page": 32,
+      "id": "coroutines-32",
+      "title": "Progressive labs",
+      "textSha256": "e9ebac7640eff4dbc3c696262d9acaba916bc2170ab499303a6608e1680ded9f",
+      "codeSha256": [],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 33,
+      "id": "coroutines-33",
+      "title": "Checkpoints with answer cues",
+      "textSha256": "2cd7c9b07fa55cf453bdb90c2d519e491df46b57b83cea039a8a0e75c918e2a5",
+      "codeSha256": [],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 34,
+      "id": "coroutines-34",
+      "title": "Quick reference and glossary",
+      "textSha256": "54b3d5a54de66e0398cca4ae81871ecdb5f6e8ce886ee03a0cc4a70ec444aa39",
+      "codeSha256": [],
+      "tableCount": 1,
+      "links": []
+    },
+    {
+      "page": 35,
+      "id": "coroutines-35",
+      "title": "Run snippets and discover tests",
+      "textSha256": "544998aade4cdeba8056c25b3f7bb7b96b41f97ed49034d6cc960b58d5e354f2",
+      "codeSha256": [
+        "4a165de884e58c626018a3b20ca600c450842a6ad7332d586d5df802d1b44987",
+        "4a66a68ec369f993ada7704676e29d2e4f523467db41efda5e2387729ef3b321"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 36,
+      "id": "coroutines-36",
+      "title": "Worked solution: the failure matrix",
+      "textSha256": "a48e86b199301f7ae54c3d910b0a9988802acebbfceb2f99ab42eaf9d0ac4fc6",
+      "codeSha256": [
+        "1c4fafe0eee8a63513cb37f3aa5a72dd96f4354996329b7b5dc1ffad8620e82b",
+        "ef933ec123ed1595b6094924708c6b390b2a6766963953701a778de9ddb22034"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 37,
+      "id": "coroutines-37",
+      "title": "Worked solution: streams",
+      "textSha256": "d1b02af55d05d93067a350ee27188e2c479bbc50f894c9804849af7c5efeac4d",
+      "codeSha256": [
+        "689656c6df7779fdad9916d520c6f615301eab3372c97743251980b00b72b5fe",
+        "0f1348667d878919a366eabe87fe4fe5c894e430cd6c7e8db516355bf0da8300"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 38,
+      "id": "coroutines-38",
+      "title": "Worked solution: shared state",
+      "textSha256": "c2ad38a0ce36fc5a4cbf4a6e08720fbec06fcb46bba278627887c025b0991a08",
+      "codeSha256": [
+        "36b30caf00627d1f9536783ae78a9bd5a7703b5e1465dca59d693db6552c5c6b",
+        "01d0f556c36290d1dd2ccdaebfe854ba72b8aad96d7eb25e28a9b49f4f12d414"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 39,
+      "id": "coroutines-39",
+      "title": "Worked solution: Android unit tests",
+      "textSha256": "4bf3a682df2cd943577e371a26585c17943c21c47be1dc8af239108a645bba8e",
+      "codeSha256": [
+        "1022431a26621c03bbbfeaf5f5be9f49c9c91123ab7567104b8da904e3ec4780"
+      ],
+      "tableCount": 0,
+      "links": []
+    },
+    {
+      "page": 40,
+      "id": "coroutines-40",
+      "title": "Readiness review and next steps",
+      "textSha256": "ee9c7641675a0753a41b88c9425a44163ff02d9546080a1e2390729cafc68bae",
+      "codeSha256": [],
+      "tableCount": 1,
+      "links": []
+    },
+    {
+      "page": 41,
+      "id": "coroutines-41",
+      "title": "Official reading / foundations and ownership",
+      "textSha256": "3d0f2e211f15431ed399a2752746fccf377b808165c2e04ea0e9a921d7c27fbe",
+      "codeSha256": [],
+      "tableCount": 0,
+      "links": [
+        "https://kotlinlang.org/docs/coroutines-basics.html",
+        "https://kotlinlang.org/docs/lambdas.html",
+        "https://kotlinlang.org/docs/exceptions.html",
+        "https://kotlinlang.org/docs/exception-handling.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/ensure-active.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-interruptible.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/supervisor-scope.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-supervisor-job.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html",
+        "https://kotlinlang.org/docs/shared-mutable-state-and-concurrency.html",
+        "https://kotlinlang.org/docs/jvm-test-using-junit.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.sync/-mutex/"
+      ]
+    },
+    {
+      "page": 42,
+      "id": "coroutines-42",
+      "title": "Official reading / streams, Android, and tests",
+      "textSha256": "4d1fb5c2df6b29ce3e4a755f2b03430f9b80df22d55962bb9bee20ee041cbc3b",
+      "codeSha256": [],
+      "tableCount": 0,
+      "links": [
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-state-flow/",
+        "https://developer.android.com/kotlin/flow/stateflow-and-sharedflow",
+        "https://kotlinlang.org/docs/coroutine-context-and-dispatchers.html",
+        "https://kotlinlang.org/docs/composing-suspending-functions.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/flow.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/flow-on.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/catch.html",
+        "https://developer.android.com/kotlin/coroutines/coroutines-best-practices",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-shared-flow/",
+        "https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/run-catching.html",
+        "https://developer.android.com/topic/libraries/architecture/coroutines",
+        "https://developer.android.com/kotlin/coroutines/test",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/buffer.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/conflate.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/collect-latest.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/combine.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/zip.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/retry-when.html",
+        "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/update.html"
+      ]
+    }
+  ]
+}
