@@ -48,3 +48,13 @@ All 99 lessons were reviewed again. No additional general-interview lessons were
 - `background` now demonstrates `APPEND_OR_REPLACE` for queued outbox drains and explains its backlog tradeoff. `KEEP` ignores a new trigger while work is unfinished, which can miss an edit arriving after the worker's final outbox read. The lesson also explains the database-to-scheduler crash gap and reconciliation. See [WorkManager policy semantics](https://developer.android.com/reference/androidx/work/ExistingWorkPolicy).
 
 The count remains 99. Review completion still does not establish Kotlin compilation, actual Android scheduling behavior, or interview readiness.
+
+## Kotlin and Android depth pass — 2026-10-26
+
+Expanded the explanations in all 19 Kotlin and 28 Android lessons. Each lesson now connects its concept to the existing example, describes a practical application, explains failure modes and tradeoffs, and provides a fuller answer to its interview prompt. The goal is to help candidates explain why an approach works rather than only recognize an API name.
+
+Kotlin explanations emphasize type contracts, collection ownership, allocation and complexity, coroutine failure propagation, cancellation, stream delivery, testing, and Unicode assumptions. Android explanations distinguish composition, view, Activity, process, and persistent-data lifetimes, and deepen the existing coverage of storage, background work, testing, performance, accessibility, security, and release tooling.
+
+The lesson IDs, examples, quizzes, navigation, review history, and PDF resource remain stable. Data structures, algorithms, and mobile system design content are outside this pass. The expanded copy retains the existing mobile-friendly lesson layout and offline delivery.
+
+Guidance was rechecked against official [Kotlin documentation](https://kotlinlang.org/docs/home.html), [coroutine documentation](https://kotlinlang.org/docs/coroutines-guide.html), [Android architecture recommendations](https://developer.android.com/topic/architecture/recommendations), and the section-specific references. Validation exercises the rendered site and static/offline packaging; it does not establish Kotlin compilation or Android device behavior.

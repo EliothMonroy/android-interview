@@ -40,4 +40,4 @@ On browsers exposing `document.modelContext`, an optional `set_current_lesson_re
 
 ## Coverage review
 
-The initial 32-lesson refresher was expanded to 99 lessons after two reviews: 19 Kotlin, 12 data structures, 19 algorithms, 28 Android, and 21 mobile system design. See [CONTENT_REVIEW.md](CONTENT_REVIEW.md) for the gap assessment, scope, sources and practice method. Reading completion is not a readiness certificate; use the applied drills and tailor specialist study to the target role.
+The initial 32-lesson refresher was expanded to 99 lessons after two reviews: 19 Kotlin, 12 data structures, 19 algorithms, 28 Android, and 21 mobile system design. See [CONTENT_REVIEW.md](CONTENT_REVIEW.md) for the gap assessment, scope, sources and practice method. The Kotlin and Android lessons include expanded example walkthroughs, tradeoffs, and interview explanations. Reading completion is not a readiness certificate; use the applied drills and tailor specialist study to the target role.

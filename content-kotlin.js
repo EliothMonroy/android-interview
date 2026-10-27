@@ -13,23 +13,23 @@ window.PRIMERS = [...(window.PRIMERS || []),
     lessons: [
       {
         id: 'kotlin-null', title: 'Null safety & early returns',
-        summary: 'Use nullable types to make absence explicit. A safe call returns null; Elvis supplies a default or exits.',
-        useCase: 'Parse optional input without exceptions or deeply nested conditions.', language: 'kotlin',
+        summary: "Nullable types make absence part of a function contract instead of an assumption callers must remember. In positiveCount, safe calls trim and parse only when their receiver exists. A missing value, invalid number, or number outside the Int range reaches the Elvis early return. After that guard, count is a non-null Int, and coerceAtLeast turns negative inputs into zero while preserving positive values.",
+        useCase: "Use this pattern at form, configuration, and network boundaries where missing or malformed text is expected. State whether zero is an acceptable fallback; return a richer validation result when the caller must distinguish absence, invalid syntax, and a negative value.", language: 'kotlin',
         code: `fun positiveCount(raw: String?): Int {
     val count = raw?.trim()?.toIntOrNull() ?: return 0
     return count.coerceAtLeast(0)
 }
 // positiveCount(" 12 ") == 12
 // positiveCount("oops") == 0`,
-        pitfall: '!! asserts a value is present and can throw. Java platform types still need careful boundary validation.',
+        pitfall: "Replacing the safe-call chain with !! converts an expected input condition into a runtime failure. Also, this function intentionally collapses several cases into zero: null, blank text, malformed or overflowing numbers, and negative integers. That policy may hide a validation error in another domain.",
         question: 'Why use toIntOrNull() instead of toInt() for untrusted input?',
-        answer: 'It models invalid input as null, so the fallback is explicit rather than exception-driven.',
+        answer: "toIntOrNull() returns null for invalid integer syntax or a value outside the Int range, allowing Elvis to express the expected fallback directly. toInt() throws NumberFormatException for those inputs, so ordinary invalid user input would require exception handling. Neither method accepts arbitrary numeric formats such as decimal fractions; trimming is a separate step in this example. In an interview, explain the chosen fallback and ask whether invalid input should produce zero, a field error, or a typed validation result.",
         quiz: { question: 'What does positiveCount(null) return?', options: ['null', '0', 'It throws'], correct: 1, explanation: 'The safe-call chain returns null; Elvis immediately returns 0.' }
       },
       {
         id: 'kotlin-collections', title: 'Collections & mutability',
-        summary: 'List is a read-only interface, not a promise of deep immutability. val prevents reassignment, not mutation.',
-        useCase: 'Build results with local mutation, then expose a read-only collection.', language: 'kotlin',
+        summary: "Collection interfaces describe which operations a reference exposes. List supports reading, while MutableList also supports changes; val restricts reassignment of the reference. uniqueSorted uses mutation only inside the function: a local set removes repeated integers, then sorted creates an ascending result list. With n inputs and k distinct values, expected set insertion plus sorting costs O(n + k log k), with O(k) auxiliary and result storage.",
+        useCase: "Keep temporary builders private when assembling a result, then expose a List so callers use a clear reading contract. For shared state, also decide who owns the underlying collection and whether mutable elements require snapshots or independent copies.", language: 'kotlin',
         code: `fun uniqueSorted(values: List<Int>): List<Int> {
     val seen = mutableSetOf<Int>()
     for (value in values) seen.add(value)
@@ -37,15 +37,15 @@ window.PRIMERS = [...(window.PRIMERS || []),
 }
 // uniqueSorted(listOf(3, 1, 3)) == listOf(1, 3)
 // O(n + k log k) expected time; O(k) space`,
-        pitfall: 'toList() copies the container, but its mutable elements remain shared. IntArray avoids boxed Int elements on the JVM.',
+        pitfall: "A read-only view may still change if another reference mutates the same backing collection. Copying with toList() separates the container but shares element references. Hash-based deduplication also relies on stable equals/hashCode behavior; changing an element used as a key can break lookups.",
         question: 'Can a val holding a MutableList change?',
-        answer: 'Yes. Its reference cannot be reassigned, but add(), remove(), and element replacement can mutate that list.',
+        answer: "Yes. val prevents assigning another list to that variable; it does not disable add(), remove(), or indexed replacement on the referenced MutableList. A List reference hides those write operations but may still observe writes made through another alias. Decide separately whether callers need a read-only API, a snapshot of membership, or deeply immutable values. For example, copying a list of mutable employees protects its membership from later source-list edits, but changes to an employee remain visible through both lists.",
         quiz: { question: 'Which guarantees deep immutability?', options: ['val', 'List<T>', 'Neither by itself'], correct: 2, explanation: 'Both constrain access or reassignment; neither freezes the entire object graph.' }
       },
       {
         id: 'kotlin-models', title: 'Data classes & sealed states',
-        summary: 'Data classes supply value-oriented helpers. Sealed types describe a closed set of states for exhaustive when expressions.',
-        useCase: 'Represent loading, success, and failure without incompatible boolean flags.', language: 'kotlin',
+        summary: "Data classes generate value-oriented equality, hashing, destructuring, and copying from primary-constructor properties. A sealed hierarchy models alternatives that can carry different data. Here Loading is a singleton, Ready contains people, and Failed contains a message. label covers each alternative and obtains state-specific fields through smart casts. The model prevents a single state value from claiming loading, success, and failure simultaneously, unlike independently maintained boolean flags.",
+        useCase: "Use a sealed state for a screen or operation whose valid outcomes are known, with data attached only where meaningful. Data classes help compare snapshots and write assertions, provided the objects and nested collections follow a consistent mutation policy.", language: 'kotlin',
         code: `data class Person(val id: Long, val name: String)
 sealed interface LoadState {
     data object Loading : LoadState
@@ -57,15 +57,15 @@ fun label(state: LoadState): String = when (state) {
     is LoadState.Ready -> "People: " + state.people.size
     is LoadState.Failed -> state.message
 }`,
-        pitfall: 'copy() is shallow. Generated equals/hashCode use primary-constructor properties; do not mutate a hash key after inserting it.',
+        pitfall: "copy() shares referenced nested objects, including Ready.people. val on that property does not freeze its list or elements. Generated equality ignores properties declared only in the class body, and mutating constructor state that participates in hashCode can make a map key or set member unreachable.",
         question: 'Why omit else in this when expression?',
-        answer: 'The compiler can flag missing states when a new sealed subtype is added.',
+        answer: "Omitting else makes this expression depend on the compiler proving exhaustive coverage of LoadState. If another state is added, recompilation identifies the places that need a deliberate label, instead of silently routing them through a generic fallback. This is valuable when a new state has distinct user behavior, such as an empty result or authentication failure. An else branch can be appropriate for intentionally generic handling, but it gives up this maintenance signal. Exhaustiveness also does not establish that state transitions themselves are valid.",
         quiz: { question: 'Data class copy() performs which operation?', options: ['Deep copy', 'Shallow copy', 'Serialization'], correct: 1, explanation: 'Referenced nested objects are shared unless explicitly copied.' }
       },
       {
         id: 'kotlin-functions', title: 'Functions, lambdas & scope',
-        summary: 'Higher-order functions accept behavior. Extensions add readable syntax without changing a class or using virtual dispatch.',
-        useCase: 'Express a small reusable transformation while keeping control flow easy to explain.', language: 'kotlin',
+        summary: "A higher-order function accepts behavior as a value, separating traversal from the transformation applied to each item. transformNames maps every name with the supplied function, defaulting to normalized(), which trims whitespace and lowercases text. The extension adds convenient call syntax without modifying String. Scope functions have different contracts: let returns its block result, while apply returns the receiver, so their choice should communicate the intended result.",
+        useCase: "Accept a lambda when callers share an algorithm but vary one operation, such as formatting names for display versus matching. Keep extension names narrow enough to reveal their actual policy; trimming and lowercasing do not implement every meaning of text normalization.", language: 'kotlin',
         code: `fun String.normalized(): String = trim().lowercase()
 fun transformNames(
     names: List<String>,
@@ -74,15 +74,15 @@ fun transformNames(
 
 // transformNames(listOf(" ADA ")) == listOf("ada")
 // let returns its lambda result; apply returns its receiver.`,
-        pitfall: 'Avoid nested scope functions with ambiguous it/this. Extension resolution depends on the declared receiver type.',
+        pitfall: "Extensions resolve from the declared receiver type rather than the runtime subclass, and an applicable member takes precedence over an extension. Nested scope functions can obscure which it or this is in use. Name lambda parameters or use ordinary statements when receivers become difficult to track.",
         question: 'When is an ordinary loop clearer than chained lambdas?',
-        answer: 'When the task needs several evolving variables, early exits, or complex branching.',
+        answer: "A loop is often clearer when the algorithm maintains several related variables, has meaningful break or continue conditions, or needs branches whose order matters. A short map or filter pipeline is useful when each stage is a simple transformation with a clear output. Avoid forcing stateful logic into lambdas merely to appear idiomatic. In this example map communicates one result per input well. If the task changes to stop at the first invalid name while tracking a position and error details, an explicit loop may explain the behavior better.",
         quiz: { question: 'What does apply return?', options: ['Its receiver', 'The final lambda expression', 'Always Unit'], correct: 0, explanation: 'apply configures a receiver and returns that same receiver.' }
       },
       {
         id: 'kotlin-sequences', title: 'Sequences & practical complexity',
-        summary: 'Collection transformations are eager; sequences defer work until a terminal operation and can avoid intermediate lists.',
-        useCase: 'Filter a large input and stop after finding a small number of matches.', language: 'kotlin',
+        summary: "Sequences request elements lazily as a terminal operation consumes them, allowing several transformations to run on one element before moving to the next. firstPositiveSquares filters values in input order, squares each accepted integer as a Long, and stops after three matches. toList triggers traversal and materializes the result. It may inspect all n values when matches are scarce, but it avoids full intermediate filtered and mapped lists.",
+        useCase: "Consider sequences for a multistep pipeline over a large input when downstream take or first can avoid substantial work. Explain the distribution of matches as well as input size, because three early positives and three late positives produce very different traversal costs.", language: 'kotlin',
         code: `fun firstPositiveSquares(values: List<Int>): List<Long> =
     values.asSequence()
         .filter { it > 0 }
@@ -91,15 +91,15 @@ fun transformNames(
         .toList()
 // Stops after 3 matches; worst-case O(n) time.
 // Long multiplication prevents Int square overflow.`,
-        pitfall: 'Laziness has overhead and is not always faster. Sorting still needs the input; benchmark real workloads.',
+        pitfall: "Laziness adds iterator and dispatch overhead, so it is not a universal speed improvement. Operations such as sorting require all relevant elements before producing their first result. Re-traversing a reusable sequence can repeat computation and side effects; a sequence is not automatically a cached result.",
         question: 'Why convert to Long before multiplying?',
-        answer: 'Converting an already-overflowed Int product to Long cannot recover the correct value.',
+        answer: "Multiplication must use a sufficiently wide type before the arithmetic happens. If both operands are Int, their product can overflow as an Int; converting that corrupted result to Long only widens the incorrect value. Here it.toLong() makes the multiplication operate as Long, and every positive Int square fits within Long. This guarantee depends on the input type and operation: arbitrary Long values can overflow when squared. Mention overflow policy explicitly, such as checked arithmetic or a larger numeric representation, when the domain exceeds these bounds.",
         quiz: { question: 'Which operation triggers this sequence?', options: ['filter', 'map', 'toList'], correct: 2, explanation: 'toList is terminal and requests the elements.' }
       },
       {
         id: 'kotlin-coroutines', title: 'Structured concurrency',
-        summary: 'Suspending functions may pause without blocking a thread. A coroutine scope owns child work and waits for its completion.',
-        useCase: 'Run two independent suspending requests concurrently, returning only when both finish.', language: 'kotlin',
+        summary: "Structured concurrency keeps concurrent work inside an owning scope with a defined completion and cancellation boundary. loadTogether starts two async children before awaiting either result, so their suspending work can overlap. coroutineScope returns their Pair only after successful completion and waits for its children to finish. The children inherit the caller context, so concurrency here does not promise separate threads or make blocking operations safe on the main thread.",
+        useCase: "Use this all-or-fail pattern when a result requires two independent requests, such as profile data and permissions. Keep dependent requests sequential, and choose explicit dispatchers or main-safe repository APIs when an operation performs blocking I/O or substantial CPU work.", language: 'kotlin',
         code: `// Requires kotlinx-coroutines-core.
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -112,9 +112,9 @@ suspend fun <A, B> loadTogether(
     val b = async { second() }
     a.await() to b.await()
 }`,
-        pitfall: 'suspend does not move work off the main thread. Use an appropriate dispatcher for blocking/CPU work; preserve cancellation.',
+        pitfall: "async inside a regular scope can fail the scope before its result is awaited. Catching an exception only around await does not undo cancellation already propagated through that hierarchy. Cancellation also requires cooperation: a blocking call or tight computation may keep running until it returns or checks cancellation.",
         question: 'What happens if one child fails in this coroutineScope?',
-        answer: 'Failure cancels the sibling and propagates from the scope. Use supervision when independent failures are part of the design.',
+        answer: "A child failure other than ordinary cancellation fails this coroutineScope, cancels its sibling, and is rethrown to the caller after child cleanup completes. This behavior applies even if the failing Deferred has not yet been awaited; async does not isolate failure by itself. Parent cancellation also cancels both children. If one request is optional, use supervision with explicit per-child recovery or typed results. Simply replacing coroutineScope with supervisorScope is insufficient if an uncaught await exception then escapes the supervisor block and cancels its remaining children.",
         quiz: { question: 'Does suspend automatically run a function on a background thread?', options: ['Yes', 'No', 'Only on Android'], correct: 1, explanation: 'Execution uses the coroutine context; suspension and thread selection are separate concerns.' }
       }
     ]
@@ -437,8 +437,8 @@ fun topK(values: IntArray, k: Int): List<Int> {
   );
   section('kotlin').lessons.push(
     lesson('kotlin-delegation', 'Interfaces, composition & delegation',
-      'Interfaces define contracts; classes are final by default. Compose behavior with collaborators, and use by to forward an interface.',
-      'Decorate a repository or logger without inheriting its implementation.',
+      "An interface defines capabilities independently of a particular implementation. Kotlin class delegation generates forwarding members for a collaborator rather than inheriting that collaborator. TaggedLogger implements Logger through delegate, then explicitly overrides log to prefix the message before forwarding it. Because Logger currently has only that one method and it is overridden, the example demonstrates the delegation syntax but has no remaining method that needs generated forwarding.",
+      "Wrap a repository, logger, or client to add metrics, tags, or caching while accepting the same interface. Composition lets tests supply a fake collaborator and lets the wrapper change without inheriting the lifecycle and internal implementation details of a base class.",
       `interface Logger { fun log(message: String) }
 class ConsoleLogger : Logger {
     override fun log(message: String) = println(message)
@@ -449,14 +449,14 @@ class TaggedLogger(private val delegate: Logger) : Logger by delegate {
     }
 }
 // TaggedLogger(ConsoleLogger()).log("Ready")`,
-      'Calls made inside the delegate use its own implementations; overriding a wrapper method does not intercept those internal calls.',
+      "Calls originating inside the delegate use its own methods and properties, so wrapper overrides do not intercept those internal calls. Also ensure an override calls the collaborator rather than accidentally calling itself. Delegation reduces forwarding boilerplate but does not automatically define a sound ownership or threading policy.",
       'When is an abstract class useful?',
-      'When related implementations share state or protected behavior; prefer an interface when only a contract is needed.',
+      "An abstract class is useful when related implementations should share instance state, constructors, protected helpers, or an implementation template with defined extension points. An interface works well when callers need a capability and implementations should remain free to use different state and inheritance structures. Kotlin permits a class to implement multiple interfaces but inherit only one class, so a shared base consumes that choice. In this logger example, an interface plus a collaborator is sufficient; no shared protected state requires an abstract base class.",
       'What does Logger by delegate generate?', ['Forwarding implementations', 'A subclass of delegate', 'A deep copy'], 0,
       'Delegation forwards interface members to the supplied object, unless explicitly overridden.'),
     lesson('kotlin-variance', 'Generics & variance',
-      'Use out for producers and in for consumers. A mutable container is usually invariant because it both reads and writes T.',
-      'Design reusable APIs that accept safely related types without unchecked casts.',
+      "Variance controls how generic types relate when their arguments have a subtype relationship. Source declares out T because it only produces values, allowing Source<String> to widen to Source<Any>. Sink declares in T because it consumes values, so a Sink<Any> can safely accept strings wherever a Sink<String> is needed. copyOne connects these contracts. List<*> means the element type is unknown, so reads have the safe type Any?.",
+      "Declare producer and consumer interfaces for repositories, serializers, callbacks, and transformations so callers can reuse safely related implementations. Separate reading from writing when that reflects the real contract; use invariant mutable containers when both operations must preserve the same element type.",
       `interface Source<out T> { fun read(): T }
 interface Sink<in T> { fun write(value: T) }
 fun copyOne(source: Source<String>, sink: Sink<String>) {
@@ -465,14 +465,14 @@ fun copyOne(source: Source<String>, sink: Sink<String>) {
 fun widen(source: Source<String>): Source<Any> = source
 // Sink<Any> can be passed where Sink<String> is required.
 // List<*> can be read as Any?; its element type is unknown.`,
-      'MutableList<String> cannot be a MutableList<Any>: that would permit inserting a number into a string list.',
+      "MutableList<String> cannot widen to MutableList<Any>, because an Any consumer could insert an Int and violate the original string contract. A star projection preserves safety by restricting operations; it does not mean every possible type argument can be freely inserted or that runtime element types were inspected.",
       'Why is Source<String> usable as Source<Any>?',
-      'Every value it produces is a String, which is also an Any. It cannot consume an incompatible Any.',
+      "Source<String> can stand in for Source<Any> because every value its read() produces satisfies the promised Any result. Declaring out prevents this contract from consuming arbitrary T arguments that could make widening unsafe. The direction reverses for Sink: a consumer able to handle any Any can certainly handle a String, while a String-only consumer cannot handle every Any. The default upper bound for an unconstrained type parameter is Any?, so distinguish nullable from non-null contracts when extending the example. Variance is enforced by the compiler, not by casts.",
       'Which modifier fits a type that only consumes T?', ['out', 'in', 'reified'], 1,
       'Contravariance uses in to allow a consumer of a broader type to satisfy a narrower consumer contract.'),
     lesson('kotlin-inline', 'Inline, reified & lambda returns',
-      'Inlining can remove lambda overhead and enables reified type checks. noinline retains a lambda value; crossinline forbids non-local returns.',
-      'Filter mixed values by a type known at the call site.',
+      "An inline function substitutes its body at call sites and can inline eligible lambda arguments, sometimes avoiding function-object overhead. Reified parameters make the call-site type available for checks inside that body. instances walks the input once and collects values satisfying item is T, producing the two integers in the example. noinline preserves a lambda as a regular value; crossinline disallows returns that would leave the enclosing caller.",
+      "Use reified helpers for small type-oriented operations such as selecting instances from heterogeneous input. Use ordinary functions when a runtime Class or another explicit type descriptor already expresses the requirement, or when inlining a large body offers no meaningful benefit.",
       `inline fun <reified T> Iterable<*>.instances(): List<T> {
     val result = mutableListOf<T>()
     for (item in this) if (item is T) result.add(item)
@@ -480,14 +480,14 @@ fun widen(source: Source<String>): Source<Any> = source
 }
 // listOf(1, "two", 3).instances<Int>() == listOf(1, 3)
 // O(n) time, O(k) result space.`,
-      'Reification does not recover erased nested arguments: checking List<String> cannot validate every element as String.',
+      "Reification makes the outer type available but does not restore erased nested generic arguments. Selecting instances<List<String>>() cannot establish that every member of every selected list is a String. Validate nested contents explicitly when data crosses an untrusted boundary, rather than treating this helper as a recursive type validator.",
       'Why not inline every large function?',
-      'Inlining can increase generated code size. Use it for a reason such as a small higher-order function or reified type parameter.',
+      "Inlining copies code into call sites, which can increase generated size when a function is large or used widely. Its value should come from a concrete requirement, such as reified type checks or eligible higher-order calls where avoiding lambda overhead matters. It does not change instances from O(n) traversal or remove the output list allocation. A useful follow-up is to distinguish compiler inlining from JVM runtime optimization: marking a function inline is a language-level choice with semantics such as non-local returns, not a general request to make every call faster.",
       'Where can a reified type parameter be declared?', ['Any class', 'An inline function', 'Any interface'], 1,
       'The compiler substitutes the concrete type at inline call sites.'),
     lesson('kotlin-equality', 'Equality & Java boundaries',
-      '== uses null-safe equals; === checks reference identity. Arrays need contentEquals for element comparison.',
-      'Avoid surprising comparisons and normalize Java platform types at the boundary.',
+      "Kotlin == performs a null-safe equals check, while === asks whether references identify the same object. Array classes do not provide the elementwise equality often expected from lists, so sameValues calls contentEquals explicitly. At the Java boundary, title assigns the potentially missing property to String?, trims a present value, rejects an empty result, and returns Untitled for either missing or whitespace-only input.",
+      "Normalize Java or external inputs when they enter Kotlin code so downstream functions receive an honest nullable or validated non-null contract. Choose equality according to the domain: array content for payloads, value equality for models, and identity only when object sameness is the requirement.",
       `fun sameValues(a: IntArray, b: IntArray): Boolean =
     a.contentEquals(b)
 
@@ -497,14 +497,14 @@ fun title(properties: java.util.Properties): String {
     return raw?.trim()?.takeIf { it.isNotEmpty() } ?: "Untitled"
 }
 // intArrayOf(1) == intArrayOf(1) is false.`,
-      'Do not use identity equality for boxed numbers or strings. Java nullability annotations improve safety but do not replace input validation.',
+      "String interning and number boxing can make reference equality appear to work for selected values and fail for others. contentEquals is elementwise; nested arrays require a deliberately deeper comparison such as contentDeepEquals. Java annotations assist null analysis but cannot validate business rules such as nonblank titles.",
       'Why explicitly assign a Java platform value to nullable String?',
-      'It establishes a nullable Kotlin contract so subsequent accesses require safe handling.',
+      "Assigning the Java result to String? makes the possibility of absence explicit and causes later access to require a safe call, guard, or fallback. An unannotated platform value otherwise permits both nullable and non-null usage, potentially deferring a bad assumption to a runtime failure. Here absence is legitimate, so the nullable local matches the API behavior and keeps fallback policy visible. If the property is mandatory instead, validate once at the boundary and return a domain error or establish a non-null value before passing it further.",
       'Which compares two IntArray values element by element?', ['===', '==', 'contentEquals'], 2,
       'Array equality otherwise compares array objects, not their contained values.'),
     lesson('kotlin-supervision', 'Failures, cancellation & supervision',
-      'Normal child failure cancels its scope. Supervision lets independent children fail separately; cancellation still propagates from the parent.',
-      'Keep optional work independent while surfacing each child failure explicitly.',
+      "Supervision isolates a child failure from sibling children, while parent cancellation still stops the supervised work. optionalPair also supplies a recovery policy: each child converts IOException into null and rethrows CancellationException. Both requests begin before either await. Therefore a recoverable I/O failure can coexist with the other successful result. Other exception types remain failures, and an exception escaping an await can still fail the supervisor block.",
+      "Use this pattern when two optional sources may fail independently, such as recommendation panels beside a primary screen. Define which failures are recoverable and how the caller distinguishes unavailable data from a successful empty response; use typed outcomes when null loses needed diagnostic information.",
       `// Requires kotlinx-coroutines-core.
 import kotlinx.coroutines.*
 
@@ -520,14 +520,14 @@ suspend fun optionalPair(
     val b = async { attempt(second) }
     a.await() to b.await()
 }`,
-      'Do not swallow CancellationException with broad catches or runCatching. Supervision does not automatically handle failures or make await succeed.',
+      "supervisorScope changes failure propagation but does not make a failed Deferred return normally. If an unexpected failure escapes await, the block fails and cancels unfinished children. Broad catches and runCatching can also swallow cancellation unless it is rethrown, allowing obsolete work or misleading success results.",
       'Does CoroutineExceptionHandler recover a failed coroutine?',
-      'No. It observes uncaught failures in applicable root contexts; recovery belongs around the operation or await.',
+      "No. CoroutineExceptionHandler observes an uncaught failure in applicable contexts after the coroutine has failed; it cannot resume the failed computation or supply its missing result. Recovery belongs around the operation that can fail or an await in a suitable supervised design. A handler installed on an ordinary child often does not receive its failure because propagation belongs to the parent. async exposes failure through its Deferred. In this example IOException is handled inside each child, while cancellation and unexpected errors remain visible rather than being reported as optional missing data.",
       'What should a broad catch do with cancellation?', ['Convert it to empty data', 'Rethrow it', 'Retry forever'], 1,
       'Cancellation is cooperative control flow and must remain observable by the coroutine hierarchy.'),
     lesson('kotlin-flows', 'Flow, StateFlow & SharedFlow',
-      'A flow builder is cold and runs per collector. StateFlow is hot current state with an initial value; SharedFlow is hot broadcast with configurable replay.',
-      'Expose read-only observable state while keeping updates inside its owner.',
+      "A cold flow builder runs its emission block separately for each collector, so each numbers collector receives 1 then 2. StateFlow and SharedFlow instead share an active instance. CounterState owns a MutableStateFlow initialized to zero and exposes a read-only StateFlow view. increment uses an atomic update operation. Observers see current state, while SharedFlow offers configurable replay and buffering for broadcasts whose delivery policy must be chosen deliberately.",
+      "Expose screen state through StateFlow when a restarted observer should immediately render the latest value. Keep mutation in the owning model. Use SharedFlow for broadcasts after specifying replay, slow-subscriber behavior, and whether events emitted while there are no subscribers may be discarded.",
       `// Requires kotlinx-coroutines-core.
 import kotlinx.coroutines.flow.*
 
@@ -542,14 +542,14 @@ fun numbers(): Flow<Int> = flow {
 }
 // SharedFlow with replay = 0 does not retain events
 // for subscribers that are absent.`,
-      'StateFlow conflates equal values and slow collectors can skip intermediate states. Neither hot flow is a durable exactly-once event queue.',
+      "StateFlow suppresses equal updates and slow collectors can skip intermediate values, so it is unsuitable as a complete event history. SharedFlow extra buffer capacity helps lagging subscribers, not absent ones: without subscribers only replay values remain. Keep update lambdas free of side effects because retries may evaluate them again.",
       'When would you choose StateFlow over SharedFlow?',
-      'When a new observer should immediately receive the current value; SharedFlow is useful for broadcasts with deliberate replay/buffering semantics.',
+      "Choose StateFlow when the model always has a meaningful current value and a new collector should receive it immediately, as with this counter. Its value property also supports synchronous reads, and equality-based conflation fits replaceable state. SharedFlow suits broadcasts that need different replay or buffer behavior, including repeated equal emissions. replay = 0 retains nothing for an absent observer, even when extra buffering is configured. Neither primitive records durable processing or guarantees exactly-once effects; commands that must survive process loss need persistent state and an acknowledgement strategy.",
       'What does a new StateFlow collector receive?', ['Only future changes', 'The current value', 'Every historical value'], 1,
       'StateFlow always has a value and replays the latest one.'),
     lesson('kotlin-concurrency', 'Dispatchers & shared state',
-      'Use Default for CPU work and IO for blocking I/O. A dispatcher does not make shared read-modify-write operations atomic.',
-      'Protect a multi-step update with a suspending mutex.',
+      "Dispatchers select execution resources; they do not serialize unrelated access to shared variables. SafeCounter protects both increment and snapshot with the same Mutex. The read-modify-write step and its returned value therefore occur in one critical section, while readers cannot observe an interleaving update. Waiting to acquire a coroutine Mutex suspends the caller instead of blocking its thread. The protection applies only to accesses that use this particular mutex.",
+      "Use a mutex when a suspending component must preserve an invariant across several related reads and writes. For a single JVM integer operation, an atomic counter may be simpler. Choose Default for CPU work and an injected IO dispatcher for blocking repository calls.",
       `// Requires kotlinx-coroutines-core.
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -564,14 +564,14 @@ class SafeCounter {
     suspend fun snapshot(): Int = mutex.withLock { value }
 }
 // For a simple JVM counter, AtomicInteger is another option.`,
-      'Volatile visibility does not make value++ atomic. Keep critical sections short; Mutex is not reentrant.',
+      "Volatile makes individual reads and writes visible but does not make value++ atomic. Mutex is not reentrant, so calling another method that acquires the same mutex from inside its lock can suspend indefinitely. Keep lock duration short and avoid coupling unrelated slow operations to shared-state access.",
       'How do you make blocking repository work testable?',
-      'Inject its dispatcher and move blocking calls with withContext. A suspending non-blocking client may already manage its own execution.',
+      "Inject the dispatcher used for blocking calls and execute those calls with withContext, allowing production to use an appropriate I/O dispatcher and tests to substitute a controlled one. Also inject the repository dependency so a fake can provide deterministic results without actual disk or network work. Merely declaring the repository function suspend does not move blocking work off the caller thread. Conversely, a non-blocking suspending client may already manage execution and need no additional dispatcher switch. Dispatcher injection enables scheduling tests; it does not itself establish thread safety or cancellation of blocking APIs.",
       'What does a mutex protect here?', ['Every process on the device', 'The critical section for this instance', 'Only reads'], 1,
       'All accesses use the same mutex, preventing concurrent interleaving of the protected state.'),
     lesson('kotlin-coroutine-tests', 'Deterministic coroutine tests',
-      'runTest provides a test scope and virtual time for delays on its test scheduler. Test behavior without waiting for wall-clock time.',
-      'Verify delayed work and cancellation with predictable scheduling.',
+      "runTest supplies a coroutine test scope and scheduler that can advance delays using virtual time. The async child inherits this scheduler, so it is initially pending rather than immediately completed. advanceUntilIdle executes scheduled work and advances through the one-second delay; await then yields 42. This verifies the delayed result without a real one-second wait, while keeping task ordering explicit enough to test intermediate states when needed.",
+      "Use scheduler control to test debounce windows, retry delays, timeouts, and cancellation cleanup. Share one test scheduler among injected dispatchers so related work advances together. Assert meaningful intermediate behavior as well as final output when the timing contract matters.",
       `// Test source: requires kotlinx-coroutines-test and kotlin-test.
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.*
@@ -586,9 +586,9 @@ class DelayTest {
         assertEquals(42, result.await())
     }
 }`,
-      'Virtual time does not skip delays on hardcoded Default/IO dispatchers. Inject test dispatchers sharing one scheduler; cancel long-lived collectors.',
+      "Hardcoded Default or IO work does not automatically use virtual time. advanceUntilIdle may also run much more work than intended, hiding an incorrect timing boundary. Long-lived collectors need cancellation or a test-owned background scope, otherwise the test can wait for work that is designed never to complete.",
       'Does runTest prove thread safety?',
-      'No. Its typical single-threaded scheduling makes timing deterministic, but real parallel races need separate stress or concurrency tests.',
+      "No. Typical runTest execution uses one thread, so coroutines interleave deterministically rather than racing on several threads. That is excellent for verifying scheduling, values, and cancellation contracts, but an unsafe counter can still pass if competing updates never run in parallel. Use appropriate synchronization and separate multithreaded or stress tests for concurrency-sensitive invariants. Even stress tests provide evidence rather than a proof that all interleavings are safe. For this example, the successful assertion establishes delayed completion and the value 42 under the test scheduler, not thread safety.",
       'Why can this test complete without a real one-second wait?', ['delay is ignored everywhere', 'The test scheduler advances virtual time', 'async blocks the thread'], 1,
       'The async child inherits the test scheduler, whose pending delay is advanced by advanceUntilIdle.')
   );

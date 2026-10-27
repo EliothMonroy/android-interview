@@ -1,6 +1,6 @@
-const CACHE = 'android-field-guide-v5';
+const CACHE = 'android-field-guide-v6';
 const STUDY_GUIDE = './docs/study-guides/kotlin-coroutines-study-guide.pdf';
-const ASSETS = ['./','./index.html','./styles.css?v=5','./app.js?v=5','./content-kotlin.js?v=5','./content-android.js?v=5','./content-design-extra.js?v=5','./content-interview-extra.js?v=5','./content-kotlin-review.js?v=5','./content-android-review.js?v=5','./content-design-review.js?v=5','./icon.svg','./manifest.webmanifest',STUDY_GUIDE];
+const ASSETS = ['./','./index.html','./styles.css?v=6','./app.js?v=6','./content-kotlin.js?v=6','./content-android.js?v=6','./content-design-extra.js?v=6','./content-interview-extra.js?v=6','./content-kotlin-review.js?v=6','./content-android-review.js?v=6','./content-design-review.js?v=6','./icon.svg','./manifest.webmanifest',STUDY_GUIDE];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('android-field-guide-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{

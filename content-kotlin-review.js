@@ -7,8 +7,8 @@
   const additions = {
     kotlin: [
       lesson('kotlin-flow-operators', 'Flow operators: cancel, buffer, or drop?',
-        'Choose operators by behavior: debounce waits for quiet input; flatMapLatest cancels the previous inner flow; buffer decouples producer and consumer.',
-        'Build a search pipeline and explain when obsolete requests are canceled.',
+        "Flow operators encode different policies for changing input and slow consumers. This search pipeline trims queries, suppresses consecutive equal text, waits for 300 milliseconds of quiet, and switches to an inner flow for the accepted query. Empty queries produce an empty list instead of a request. flatMapLatest cancels the previous inner flow when the debounced query arrives. buffer(0) removes its queued output capacity but does not undo results already consumed.",
+        "Use this pipeline for search suggestions when only the latest accepted query matters. Explain both the quiet-time policy and cancellation boundary, and collect from a lifecycle-owned scope. Model recoverable request failures inside each inner flow so later queries can still be processed.",
         `// Requires kotlinx-coroutines-core. search must cooperate with cancellation.
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -29,15 +29,15 @@ fun searchResults(
     }
     .buffer(0)
 // Collect this flow from a lifecycle-owned coroutine.`,
-        'Cancellation happens when the debounced query emits, not immediately on a keystroke, and cannot undo remote side effects. An uncaught search error ends collection; catch recoverable failures inside the inner flow to handle later queries, preserving cancellation.',
+        "A keystroke does not immediately cancel the current request because debounce precedes flatMapLatest. Old work can finish during the quiet window. Cancellation must be supported by search and cannot undo remote side effects. A search exception escaping the inner flow ends collection unless recovery is explicitly arranged.",
         'How do buffer, conflate, and collectLatest differ?',
-        'buffer queues values and normally suspends when full; conflate skips pending intermediate values; collectLatest cancels the previous collector action. Choose dropping only when intermediate values are dispensable.',
+        "buffer lets upstream and downstream overlap through a queue; its normal overflow policy suspends upstream when that queue fills. conflate lets a slow consumer skip pending intermediate values and keep the latest, while an already running collector action continues. collectLatest instead cancels that running action when another value arrives. These policies act at different boundaries: flatMapLatest switches inner flows, whereas collectLatest switches terminal processing. Use dropping or cancellation only when intermediate work is dispensable, and ensure cancelled actions cooperate and release resources. They are poor defaults for commands whose every effect must complete.",
         'What does flatMapLatest cancel when a new upstream value arrives?',
         ['The entire application scope', 'The previous inner flow', 'Every future request'], 1,
         'It switches inner flows while preserving collection of future upstream values.'),
       lesson('kotlin-channels', 'Channels versus broadcast flows',
-        'Channel receivers compete for items; SharedFlow broadcasts to active collectors according to replay/buffer policy. Neither guarantees durable completion of work.',
-        'Distribute independent in-memory jobs across a bounded worker pool.',
+        "A Channel transfers each item to one competing receiver, making it suitable for distributing work rather than broadcasting it. processJobs validates the worker count, launches one producer, and starts that many workers in a common scope. The channel buffers at most workers queued IDs; a full buffer suspends sending. Closing after production lets workers drain queued items and finish. coroutineScope waits for the producer and workers, while processing can complete out of order.",
+        "Use a bounded channel for temporary independent jobs such as processing an already loaded batch with limited concurrency. Choose worker count from resource constraints and make process safe for concurrent calls. Use SharedFlow when multiple observers should receive the same broadcast instead.",
         `// Requires kotlinx-coroutines-core.
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -58,15 +58,15 @@ suspend fun processJobs(
 }
 // O(job count) dispatch work; O(workers) buffered IDs/coroutines.
 // process may run concurrently and must protect shared state.`,
-        'Receiving an item does not acknowledge successful processing. Failure cancels this scope; crashes lose queued work. Persist important commands and track retries/idempotency separately.',
+        "A successful receive removes an item from the channel without confirming that processing succeeded. Failure cancels this scope and can leave jobs unfinished; process death loses in-memory work. Important jobs need persistence, explicit completion tracking, and a retry/idempotency policy rather than an assumption of exactly-once execution.",
         'What if two workers receive from one channel?',
-        'An item is handed to one receiver, not copied to both. With SharedFlow, multiple active collectors can observe the same emission. Cancellation can interrupt a handoff or processing.',
+        "The two workers compete, and a particular item is delivered to one of them rather than copied to both. Assignment and completion order should not be relied on for domain ordering, because workers can take different amounts of time. With SharedFlow, active collectors can each observe the same broadcast subject to replay and buffering policy. Channel handoff also does not acknowledge successful processing: cancellation or failure can intervene before the operation completes. If the requirement is reliable completion after restart, persist the job and its status independently of this in-memory transport.",
         'Which primitive fits broadcast updates to multiple observers?',
         ['A Channel with competing receivers', 'SharedFlow', 'A plain MutableList'], 1,
         'SharedFlow models broadcast. Configure replay carefully because absent subscribers do not automatically receive past events.'),
       lesson('kotlin-unicode', 'Strings, code points & allocation',
-        'Kotlin/JVM String indices count UTF-16 code units. A code point may occupy two units, and one visible grapheme can contain multiple code points.',
-        'Clarify what “character” means before implementing frequency counts, reversal, or substring logic.',
+        "On Kotlin/JVM, String.length and indices count UTF-16 code units. A supplementary code point such as the emoji in A😀 uses two units. codePointCounts reads each code point with Character.codePointAt and advances by Character.charCount, so the emoji contributes one map entry rather than two surrogate entries. The loop counts distinct code points and their frequencies; it neither groups visible graphemes nor normalizes canonically equivalent text.",
+        "Clarify the unit before implementing frequency maps, cursor movement, truncation, or reversal for international text. Code points are appropriate for some symbolic tasks, while user-visible editing often needs grapheme segmentation. Agree on normalization and comparison rules before calculating results or tests.",
         `// Kotlin/JVM; also usable on Android. No stream API required.
 fun codePointCounts(text: String): Map<Int, Int> {
     val counts = HashMap<Int, Int>()
@@ -81,9 +81,9 @@ fun codePointCounts(text: String): Map<Int, Int> {
 // codePointCounts("A😀").size == 2; "A😀".length == 3.
 // O(n) expected time, O(k) space for k distinct code points.
 // Assumes well-formed UTF-16; no normalization is performed.`,
-        'Code points still are not grapheme clusters: combining accents and emoji sequences need a Unicode segmentation policy. Use buildString/StringBuilder for repeated appends instead of repeated immutable concatenation.',
+        "Combining marks and multi-code-point emoji can form one visible grapheme, so correct code-point iteration still does not count visible characters. The example assumes well-formed UTF-16 rather than validating it. Repeated immutable concatenation can repeatedly copy growing text; use buildString or StringBuilder for incremental construction.",
         'Can visually identical text have different code point counts?',
-        'Yes. A precomposed accented letter and a base letter plus combining mark can look alike. Agree on normalization and case-folding requirements before comparison.',
+        "Yes. A precomposed é is one code point, while e followed by a combining acute accent uses two, even when both render similarly. This function therefore produces different frequency maps for those inputs. If canonical equivalence is part of the requirement, normalize consistently, for example to NFC, before counting or comparing. Normalization is distinct from case folding and does not make all visually similar characters equal. Compatibility normalization can also erase distinctions that some applications need, so choose the form from the domain rather than applying it indiscriminately.",
         'On Kotlin/JVM, what does String.length count?',
         ['Visible grapheme clusters', 'UTF-16 code units', 'UTF-8 bytes'], 1,
         'Supplementary characters occupy a surrogate pair and therefore contribute two units.')

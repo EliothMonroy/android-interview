@@ -5,13 +5,13 @@ const additions = {
     {
       "id": "properties-initialization",
       "title": "Properties: lazy & lateinit",
-      "summary": "A property can expose a custom getter. lazy computes a val on first access; lateinit delays initialization of a non-null var. Neither substitutes for a clear ownership model.",
-      "useCase": "Explain initialization, backing fields and avoiding unnecessary derived state.",
+      "summary": "Property syntax can represent computation as well as stored state. Report.count invokes its custom getter on every read, while total uses a lazy delegate that computes the Long sum on first access and caches it. ScreenDependencies instead declares a non-null mutable property whose initialization happens later; isReady checks its initialization state. These mechanisms answer different ownership questions: recompute a derived value, defer a calculation, or support externally supplied setup.",
+      "useCase": "Use a getter for cheap derived data that should reflect current inputs, and lazy for a deferred value whose cached lifetime is intentional. Prefer constructor injection for required dependencies when possible; lateinit is useful when a framework or test lifecycle must assign them later.",
       "code": "class Report(private val numbers: List<Int>) {\n    val count: Int get() = numbers.size\n    val total: Long by lazy { numbers.sumOf { it.toLong() } }\n}\nclass ScreenDependencies {\n    lateinit var repository: Repository\n    fun isReady() = this::repository.isInitialized\n}\n// Repository is an app-defined type.\n// lazy caches its result; use immutable input if freshness matters.",
       "language": "kotlin",
-      "pitfall": "Reading an uninitialized lateinit throws. lateinit cannot be used with primitive types or nullable properties. Default JVM lazy synchronizes initialization, not all access to the object it returns.",
+      "pitfall": "Reading lateinit before initialization throws, and it cannot represent a nullable or primitive property. Its readiness check is not a synchronization protocol. Default JVM lazy coordinates initialization, but does not make a mutable returned object safe for concurrent access or make a cached total refresh after list mutation.",
       "question": "Which value is recomputed on every access?",
-      "answer": "count runs its getter on each read. total is initialized once on first read and then cached. If the input list can mutate, count and total can disagree.",
+      "answer": "count runs its getter on every access, so it reads the current numbers.size. total computes only on its first successful lazy initialization and returns that cached sum afterward. The constructor accepts a List reference, which does not guarantee that another owner cannot mutate the underlying list. If it changes, count can reflect the new size while total remains an earlier sum. Choose a defensive input snapshot, a recalculating getter, or explicit cache invalidation according to the required freshness contract; lazy alone does not keep derived state synchronized with changing inputs.",
       "quiz": {
         "question": "Which value is recomputed on every access?",
         "options": [
@@ -26,13 +26,13 @@ const additions = {
     {
       "id": "coding-drill",
       "title": "Practice: group and rank records",
-      "summary": "Before coding, clarify ordering, duplicate IDs, nulls and input size. Implement a small transformation and explain allocation and complexity without leaning on autocomplete.",
-      "useCase": "20-minute drill: return names grouped by department, sorted within each group, keeping duplicates.",
+      "summary": "A coding drill should begin by identifying required behavior before choosing concise collection operations. directory groups every Employee by department, maps each group to names, and sorts those names while preserving duplicates. Empty input produces an empty map. For group sizes k, the sorting work sums across groups, with O(n log n) as an upper bound under the usual unit-cost comparison model and O(n) stored references across results and intermediates.",
+      "useCase": "Practice explaining this transformation aloud with empty input, multiple departments, repeated names, and already sorted groups. State whether departments need alphabetical order and whether string ordering should be natural or locale-aware before choosing a map type and comparator.",
       "code": "data class Employee(val department: String, val name: String)\nfun directory(people: List<Employee>): Map<String, List<String>> =\n    people.groupBy { it.department }\n        .mapValues { (_, group) -> group.map { it.name }.sorted() }\n\n\nfun main() {\n    check(directory(emptyList()).isEmpty())\n    check(directory(listOf(Employee(\"A\", \"Z\"), Employee(\"A\", \"B\")))\n        == mapOf(\"A\" to listOf(\"B\", \"Z\")))\n    // O(n log n) upper-bound time; O(n) result/intermediate storage.\n}",
       "language": "kotlin",
-      "pitfall": "Do not claim groupBy removes duplicates or sorts map keys. If department order matters, explicitly choose a sorted map.",
+      "pitfall": "groupBy preserves duplicate records and does not alphabetize department keys. Sorting names also does not resolve duplicate employee identity. Complexity estimates treating comparisons as constant should be qualified for long strings, whose comparisons can examine multiple characters. An allocation-saving rewrite should preserve the same observable ordering and duplicate policy.",
       "question": "What should you clarify before changing this to a set?",
-      "answer": "Whether repeated names represent distinct records. A set changes semantics and should follow an explicit deduplication requirement.",
+      "answer": "Clarify whether repeated names represent distinct employees or duplicate records, and identify the actual deduplication key. Two employees can share a name, while one employee might appear with different display names. Converting each group to a set would silently discard repeated names and change the required output. If deduplication is requested, decide whether it applies before grouping, within departments, or globally, and define which record wins. Then choose the data structure and explain its equality, ordering, time, and storage behavior against that explicit contract.",
       "quiz": {
         "question": "What should you clarify before changing this to a set?",
         "options": [
@@ -137,13 +137,13 @@ const additions = {
     {
       "id": "implementation-drill",
       "title": "Practice: build a resilient screen",
-      "summary": "Combine the primitives into a small vertical slice: UI state, repository, local data, network refresh and retry. Explain rotation, process recreation and what happens offline.",
-      "useCase": "45-minute exercise: build or sketch a searchable list in either XML/Fragment or Compose, then explain the other UI approach.",
+      "summary": "A resilient screen combines explicit UI state with repository behavior, persistence, cancellation, and lifecycle ownership. The example models loading, content with a stale flag, and failure as a sealed interface; its exhaustive summary function handles each alternative. The exercise then asks you to bind that state, preserve the search query, retry failures, and keep cached content visible during refresh problems. Rendering these states is only the beginning of the implementation.",
+      "useCase": "Use a 45-minute interview exercise to build a searchable feed with a fake repository. Start with observable loading and content, introduce a failed refresh and retry, then demonstrate how the same state contract supports either Compose or a Fragment view.",
       "code": "sealed interface FeedUi {\n    data object Loading : FeedUi\n    data class Content(val titles: List<String>, val stale: Boolean) : FeedUi\n    data class Failed(val message: String) : FeedUi\n}\nfun summary(state: FeedUi): String = when (state) {\n    FeedUi.Loading -> \"Loading\"\n    is FeedUi.Content -> \"Items: \" + state.titles.size\n    is FeedUi.Failed -> state.message\n}\n// Exercise: bind state, emit retry actions, preserve the query,\n// and keep cached content visible if refresh fails.",
       "language": "kotlin",
-      "pitfall": "Do not mark the exercise complete because a screen renders. Verify cancellation, empty/error states, accessibility, rotation and an injected fake repository.",
+      "pitfall": "Replacing usable content with a full-screen failure discards offline value. The shown state is a starting point: its stale flag does not separately describe an active refresh or explain a refresh error. Define those behaviors deliberately, and ensure obsolete searches cannot overwrite newer results.",
       "question": "What evidence would show this slice is resilient?",
-      "answer": "Tests for loading/content/error and retry; a process-restoration plan; canceled obsolete searches; usable cached data offline; and UI assertions for both empty and failure behavior.",
+      "answer": "Demonstrate initial loading, successful content, an empty result, failure without cache, and a failed refresh that leaves cached content usable. Show retry recovering and cancellation preventing an older search from replacing a newer one. Use a fake repository for deterministic state tests and UI assertions for visible controls and messages. Recreate the screen to verify query restoration, and explain how durable records reload after process loss. Include accessibility and offline behavior. Each claim should correspond to an observed behavior or test, not simply an architecture diagram.",
       "quiz": {
         "question": "What evidence would show this slice is resilient?",
         "options": [
