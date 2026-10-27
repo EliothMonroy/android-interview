@@ -1,8 +1,12 @@
 # Android Interview Field Guide
 
-A mobile-first, dependency-free study website with 99 concise lessons across Kotlin, data structures, algorithms, Android (Views and Compose), and mobile system design.
+A mobile-first, dependency-free study website with 99 primer lessons across Kotlin, data structures, algorithms, Android (Views and Compose), and mobile system design, plus a complete 42-chapter Kotlin Coroutines course.
 
 Each lesson has a Kotlin example, a practical use case, a pitfall, a revealable interview answer, and an immediate-feedback quiz. The algorithms section also includes a step-through binary search lab. Reviewed lessons and light/dark/system preferences stay in local browser storage.
+
+## Kotlin Coroutines course
+
+Select **Kotlin Coroutines** in the navigation to read the complete PDF as native web chapters: explanations, code, tables, exercises, checkpoint answers, the 35-session schedule, worked solutions, glossary, and official resources. Jump between chapters, follow page references, copy individual examples, and track review progress offline. The course preserves the source edition reviewed on 30 September 2026. See the [migration and page map](docs/study-guides/coroutines-web-migration.md) for content-fidelity checks.
 
 ## Study guides
 
@@ -32,7 +36,7 @@ npm test
 npm run build
 ```
 
-`dist/` contains only the fourteen public assets, including the PDF. `jsdom` is a development-only test dependency. Tests execute all 99 lessons, quiz answers, theme changes, local progress, navigation, binary-search outcomes, and service-worker cache/fallback contracts, and PDF link/packaging/offline behavior. They do not replace real-device visual or offline-browser testing. Kotlin examples are statically reviewed teaching snippets, not an executable Android project; Android examples omit imports and app-specific setup.
+`dist/` contains only the sixteen public assets, including the PDF. `jsdom` is a development-only test dependency. Tests execute all 99 lessons, quiz answers, theme changes, local progress, navigation, binary-search outcomes, and service-worker cache/fallback contracts, and PDF link/packaging/offline behavior. They do not replace real-device visual or offline-browser testing. Kotlin examples are statically reviewed teaching snippets, not an executable Android project; Android examples omit imports and app-specific setup.
 
 Content lives in `content-kotlin.js` and `content-android.js`; official references appear under each primer. Keep section/lesson IDs stable to preserve saved progress. Bump the cache name in `sw.js` and the asset URL version in both `index.html` and the worker asset list whenever shipped assets change. Versioned URLs prevent an older cache from hiding new content. Serve all assets together. No analytics or remote calls are made by the study app.
 
@@ -41,3 +45,7 @@ On browsers exposing `document.modelContext`, an optional `set_current_lesson_re
 ## Coverage review
 
 The initial 32-lesson refresher was expanded to 99 lessons after two reviews: 19 Kotlin, 12 data structures, 19 algorithms, 28 Android, and 21 mobile system design. See [CONTENT_REVIEW.md](CONTENT_REVIEW.md) for the gap assessment, scope, sources and practice method. The Kotlin and Android lessons include expanded example walkthroughs, tradeoffs, and interview explanations. Reading completion is not a readiness certificate; use the applied drills and tailor specialist study to the target role.
+
+## Contributing
+
+Changes use `codex/` feature branches and pull requests to `main`. Run `npm test`, `npm run build`, and `git diff --check` before requesting review. Do not merge or publish the feature before the repository owner reviews and merges the PR. See [CONTRIBUTING.md](CONTRIBUTING.md).
