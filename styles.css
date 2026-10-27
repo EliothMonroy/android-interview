@@ -253,3 +253,9 @@ pre code { display: block; min-width: min-content; }
 .orders-lane { grid-column: 2; background: var(--muted); height: .65rem; border-radius: 3px; }
 .timeline-failure { grid-column: 3 / 5; padding-left: .3rem; }
 .timeline-success { grid-column: 4; padding-left: .3rem; }
+
+.lesson-group { color: var(--muted); font-size: .75rem; font-weight: 600; line-height: 1.5; min-width: 125px; padding: .5rem; align-self: center; }
+.course-navigation-note { background: var(--surface-alt); border-radius: 6px; padding: .8rem 1rem; font-size: .875rem; }
+.course-reference { font-size: .875rem; line-height: 1.65; margin: 1rem 0; overflow-wrap: anywhere; }
+.course-resources h3 { font-size: 1rem; }
+@media (min-width: 1100px) { .lesson-group { min-width: 0; margin-top: .6rem; padding: .3rem .7rem; } }

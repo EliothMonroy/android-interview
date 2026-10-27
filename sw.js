@@ -1,6 +1,6 @@
-const CACHE = 'android-field-guide-v8';
+const CACHE = 'android-field-guide-v9';
 const STUDY_GUIDE = './docs/study-guides/kotlin-coroutines-study-guide.pdf';
-const ASSETS = ['./','./index.html','./styles.css?v=8','./app.js?v=8','./course.js?v=8','./content-coroutines.js?v=8','./content-kotlin.js?v=8','./content-android.js?v=8','./content-design-extra.js?v=8','./content-interview-extra.js?v=8','./content-kotlin-review.js?v=8','./content-android-review.js?v=8','./content-design-review.js?v=8','./icon.svg','./manifest.webmanifest',STUDY_GUIDE];
+const ASSETS = ['./','./index.html','./styles.css?v=9','./app.js?v=9','./course.js?v=9','./content-coroutines.js?v=9','./content-android-architecture.js?v=9','./content-kotlin.js?v=9','./content-android.js?v=9','./content-design-extra.js?v=9','./content-interview-extra.js?v=9','./content-kotlin-review.js?v=9','./content-android-review.js?v=9','./content-design-review.js?v=9','./icon.svg','./manifest.webmanifest',STUDY_GUIDE];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('android-field-guide-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{

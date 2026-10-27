@@ -6,6 +6,7 @@ import vm from 'node:vm';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 const pdfManifest=JSON.parse(await readFile('tests/fixtures/coroutines-pdf-manifest.json','utf8'));
+const referenceManifest=JSON.parse(await readFile('tests/fixtures/coroutines-reference-manifest.json','utf8'));
 const html=await readFile('index.html','utf8');
 const scriptPaths=[...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map(match=>match[1].split('?')[0]);
 const code=await Promise.all(scriptPaths.map(f=>readFile(f,'utf8')));
@@ -19,14 +20,14 @@ function boot(saved={},hash='') {
  return {w,d:w.document,close:()=>w.close()};
 }
 function go(w,hash){w.location.hash=hash;w.dispatchEvent(new w.HashChangeEvent('hashchange'));}
-test('the complete PDF is readable as native chapters with every source word, snippet and reference',async()=>{
+test('instructional PDF pages retain every word and snippet after course reorganization',async()=>{
  const {w,d,close}=boot({},'#coroutines');
  const sha=text=>createHash('sha256').update(text).digest('hex');
  try {
   assert.equal(sha(await readFile('docs/study-guides/kotlin-coroutines-study-guide.pdf')),pdfManifest.pdfSha256);
   assert.equal(d.querySelector('h1').textContent,'Kotlin Coroutines');
   assert.equal(d.querySelectorAll('#navigation button').length,6);
-  for(const page of pdfManifest.pages){
+  for(const page of pdfManifest.pages.filter(p=>p.page<=40)){
    go(w,`coroutines/${page.id}`);
    assert.equal(d.querySelector('h2').textContent,page.title);
    const article=d.querySelector('.course-lesson');assert.ok(article,`page ${page.page} must render as web content`);
@@ -37,6 +38,45 @@ test('the complete PDF is readable as native chapters with every source word, sn
    assert.deepEqual([...article.querySelectorAll('a[data-source-link]')].map(a=>a.href),page.links);
   }
  } finally {close();}
+});
+test('course resources live in relevant footers and preserve both complete source reference pages',()=>{
+ const {w,d,close}=boot({},'#coroutines');const found=new Map();
+ try {
+  for(const page of pdfManifest.pages.filter(p=>p.page<=40)){
+   go(w,`coroutines/${page.id}`);
+   const footer=d.getElementById('chapter-resources');assert.ok(footer);
+   for(const node of footer.querySelectorAll('[data-resource-id]'))found.set(node.dataset.resourceId,{text:node.textContent,links:[...node.querySelectorAll('a[data-source-link]')].map(a=>a.href)});
+  }
+  for(const source of referenceManifest){
+   const blocks=source.blockIds.map(id=>{assert.ok(found.has(id),`missing original reference block ${id}`);return found.get(id);});
+   assert.equal(createHash('sha256').update(blocks.map(b=>b.text).join('').replace(/\s/g,'')).digest('hex'),source.bodySha256);
+   assert.deepEqual(blocks.flatMap(b=>b.links),pdfManifest.pages.find(p=>p.page===source.sourcePage).links);
+  }
+  go(w,'coroutines/coroutines-03');assert.ok(d.querySelector('#chapter-resources a[href="https://kotlinlang.org/docs/coroutines-basics.html"]'));
+  assert.equal(d.querySelector('#chapter-resources a[href$="/-shared-flow/"]'),null);
+  go(w,'coroutines/coroutines-23');assert.ok(d.querySelector('#chapter-resources a[href$="/-state-flow/"]'));
+ }finally{close();}
+});
+test('the course groups its plan and prerequisites while keeping old reading links and progress valid',()=>{
+ const {w,d,close}=boot({'aifg-completed':'["coroutines/coroutines-41","coroutines/coroutines-35","android/compose"]'},'#coroutines');
+ try {
+  const options=[...d.querySelectorAll('#chapter-picker option')].map(o=>o.value);
+  assert.equal(options.length,40);
+  assert.deepEqual(options.slice(0,8),['coroutines-01','coroutines-02','coroutines-29','coroutines-30','coroutines-31','coroutines-03','coroutines-35','coroutines-04']);
+  assert.ok(options.indexOf('coroutines-28')<options.indexOf('coroutines-36'));
+  assert.ok(options.indexOf('coroutines-39')<options.indexOf('coroutines-34'));
+  assert.equal(options.at(-1),'coroutines-40');
+  assert.equal(d.querySelectorAll('#chapter-picker optgroup[label="FIVE-WEEK STUDY PLAN"] option').length,3);
+  assert.equal(d.querySelector('[data-lesson="coroutines-41"]'),null);
+  go(w,'coroutines/coroutines-41');assert.equal(d.querySelector('h2').textContent,'Set up a small Kotlin lab');
+  assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'false');
+  assert.equal(d.activeElement.id,'chapter-resources');assert.match(d.getElementById('course-route-note').textContent,/footer/i);
+  go(w,'coroutines/coroutines-35');assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'true');
+  go(w,'coroutines/coroutines-08');const resourcesLink=d.querySelector('a[href="#coroutines/coroutines-08/resources"]');assert.ok(resourcesLink);go(w,resourcesLink.getAttribute('href').slice(1));assert.equal(d.activeElement.id,'chapter-resources');
+  go(w,'coroutines/coroutines-31');d.getElementById('next').click();w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(d.querySelector('h2').textContent,'Set up a small Kotlin lab');
+  go(w,'coroutines/coroutines-03');d.getElementById('next').click();w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(d.querySelector('h2').textContent,'Run snippets and discover tests');
+  assert.deepEqual(JSON.parse(w.localStorage.getItem('aifg-completed')),['coroutines/coroutines-41','coroutines/coroutines-35','android/compose']);
+ }finally{close();}
 });
 test('course navigation, independent review progress, checkpoints and per-example copying work',async()=>{
  const {w,d,close}=boot({'aifg-completed':'["kotlin/kotlin-null"]'},'#coroutines/coroutines-03');
@@ -51,7 +91,7 @@ test('course navigation, independent review progress, checkpoints and per-exampl
   checkpoint.querySelector('summary').click();assert.equal(checkpoint.open,true);assert.match(checkpoint.querySelector('p').textContent,/permits suspension/);
   assert.equal(d.activeElement,d.querySelector('h2'));
   go(w,'coroutines/coroutines-35');const setup=d.querySelector('a[href="#coroutines/coroutines-27"]');assert.ok(setup,'page references must link to native chapters');
-  go(w,'coroutines/coroutines-42');d.getElementById('next').click();w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(d.querySelector('h1').textContent,'Data Structures Primer');
+  go(w,'coroutines/coroutines-40');d.getElementById('next').click();w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(d.querySelector('h1').textContent,'Data Structures Primer');
   go(w,'kotlin/kotlin-null');assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'true');
  } finally {close();}
 });
@@ -69,7 +109,7 @@ test('all primers render all interview lessons with valid quizzes and sources',(
  try {
  assert.equal(w.PRIMERS.length,6);let count=0;
  for(const s of w.PRIMERS.filter(s=>s.type!=='course')){assert.ok(s.sources.every(x=>x.url.startsWith('https://')));const ids=new Set();for(const l of s.lessons){count++;for(const field of ['title','summary','useCase','code','pitfall','question','answer']) assert.ok(typeof l[field] === 'string' && l[field].trim(), `${s.id}/${l.id} missing ${field}`);assert.ok(!ids.has(l.id));ids.add(l.id);assert.ok(l.quiz.correct>=0&&l.quiz.correct<l.quiz.options.length);go(w,`${s.id}/${l.id}`);assert.equal(d.querySelector('h2').textContent,l.title);assert.equal(d.querySelector('pre code').textContent,l.code);d.querySelector(`[data-answer="${l.quiz.correct}"]`).click();assert.match(d.getElementById('quiz-feedback').textContent,/^Correct\./);}}
- assert.equal(count,99);
+ assert.equal(count,102);
  } finally {close();}
 });
 test('progress persists, can be toggled, and resets',()=>{
@@ -120,7 +160,7 @@ test('service worker caches every local dependency and falls back offline',async
  for(const file of [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map(x=>x[1]).filter(x=>!x.startsWith('http')))assert.ok(added.includes(`./${file}`));
  handlers.activate({waitUntil:p=>pending=p});await pending;assert.deepEqual(deleted,['android-field-guide-old']);
  cacheMap.set('./index.html','offline page');handlers.fetch({request:{url:'https://guide.test/',method:'GET',mode:'navigate'},respondWith:p=>pending=p});assert.equal(await pending,'offline page');
- cacheMap.set('https://guide.test/app.js?v=8','cached js');handlers.fetch({request:{url:'https://guide.test/app.js?v=8',method:'GET',mode:'cors'},respondWith:p=>pending=p});assert.equal(await pending,'cached js');
+ cacheMap.set('https://guide.test/app.js?v=9','cached js');handlers.fetch({request:{url:'https://guide.test/app.js?v=9',method:'GET',mode:'cors'},respondWith:p=>pending=p});assert.equal(await pending,'cached js');
 });
 test('skip link preserves current lesson and navigation focuses new heading',()=>{
  const {w,d,close}=boot({},'#android/compose');try{const link=d.querySelector('.skip-link');link.click();assert.equal(w.location.hash,'#android/compose');assert.equal(d.activeElement.id,'main');go(w,'design/rest');assert.equal(d.activeElement,d.querySelector('.lesson-heading'));}finally{close();}
@@ -133,7 +173,7 @@ test('optional model context tool uses reviewed state and rejects invalid input'
 test('expanded syllabus preserves original IDs and saved review history',()=>{
  const {w,d,close}=boot({'aifg-completed':'["kotlin/kotlin-null","android/compose","design/graphql"]'},'#design/graphql');
  try {
-  const expected={kotlin:19,coroutines:42,structures:12,algorithms:19,android:28,design:21};
+  const expected={kotlin:19,coroutines:40,structures:12,algorithms:19,android:31,design:21};
   for(const s of w.PRIMERS)assert.equal(s.lessons.length,expected[s.id]);
   assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'true');
   go(w,'android/compose');assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'true');

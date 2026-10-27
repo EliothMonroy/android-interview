@@ -58,3 +58,11 @@ Kotlin explanations emphasize type contracts, collection ownership, allocation a
 The lesson IDs, examples, quizzes, navigation, review history, and PDF resource remain stable. Data structures, algorithms, and mobile system design content are outside this pass. The expanded copy retains the existing mobile-friendly lesson layout and offline delivery.
 
 Guidance was rechecked against official [Kotlin documentation](https://kotlinlang.org/docs/home.html), [coroutine documentation](https://kotlinlang.org/docs/coroutines-guide.html), [Android architecture recommendations](https://developer.android.com/topic/architecture/recommendations), and the section-specific references. Validation exercises the rendered site and static/offline packaging; it does not establish Kotlin compilation or Android device behavior.
+
+## Architecture coverage and coroutines organization — 2026-10-27
+
+Added three Android lessons answering “What is MVVM?”, “What is MVI?”, and “How do MVVM and MVI differ?”. They use the same article-search state and repository contract, expose cancellation and threading assumptions, and compare responsibilities, intents, reducers, effects, and testing. The lessons explain that MVVM can use unidirectional data flow and MVI can use a Jetpack ViewModel; neither label guarantees reliability. Definitions were checked against Android's UI-layer/state-holder guidance, Microsoft's MVVM description, and Hannes Dorfmann's original MVI intent/reducer articles, linked under the Android Primer.
+
+A separate subagent reviewed coroutines prerequisites and order. The resulting 40-chapter course groups the study schedule after orientation, moves executable setup earlier, keeps worked solutions after coroutine testing, and puts the complete reference information from the former two resource chapters into relevant footers. PDF content, code, annotations, links, stable instructional IDs, and existing review history are retained. See the migration document for the revised fidelity checks.
+
+There are now 102 primer lessons (31 Android) plus 40 coroutines chapters. Changes are delivered through an isolated managed worktree and a PR; production publication waits for review and merge. Kotlin snippets remain contextual teaching examples, not a compiled Android project.
