@@ -35,7 +35,7 @@
      case 'heading':return `<h3 data-source-text>${escape(block.text)}</h3>`;
      case 'code':return `<div class="code-header"><span>KOTLIN / EXAMPLE ${++example}</span><button class="copy-button" data-copy-code="${example-1}" aria-label="Copy code example ${example}">Copy code</button></div><pre tabindex="0" aria-label="Kotlin example ${example}"><code data-source-text>${highlight(block.code)}</code></pre>`;
      case 'note':return `<aside class="course-note"><h3 data-source-text>${escape(block.title)}</h3><p data-source-text>${runs(block.runs)}</p></aside>`;
-     case 'checkpoint':return `<details class="answer-card course-checkpoint"><summary><span data-source-text>${escape(block.prompt)}</span></summary><p data-source-text>${runs(block.runs)}</p></details>`;
+     case 'checkpoint':return `<details class="answer-card course-checkpoint"><summary><span data-source-text>${escape(block.prompt)}</span><span aria-hidden="true">+</span></summary><p data-source-text>${runs(block.runs)}</p></details>`;
      case 'table':return `<div class="course-table-wrap" role="region" aria-label="${escape(chapter.title)} table" tabindex="0"><table><thead><tr>${block.headers.map(h=>`<th scope="col" data-source-text>${escape(h)}</th>`).join('')}</tr></thead><tbody>${block.rows.map(row=>`<tr>${row.map((cell,column)=>`<td data-source-text>${block.headers[column]==='Pages'?`<a href="${chapterLink(cell.split('-')[0])}">${escape(cell)}</a>`:text(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
      case 'timeline':return timeline();
      default:throw new Error(`Unknown course block: ${block.type}`);

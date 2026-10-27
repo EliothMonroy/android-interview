@@ -55,6 +55,15 @@ test('course navigation, independent review progress, checkpoints and per-exampl
   go(w,'kotlin/kotlin-null');assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'true');
  } finally {close();}
 });
+test('opening a checkpoint keeps its question text upright',async()=>{
+ const {w,d,close}=boot({},'#coroutines/coroutines-33');
+ try {
+  const style=d.createElement('style');style.textContent=await readFile('styles.css','utf8');d.head.appendChild(style);
+  const checkpoint=d.querySelector('.course-checkpoint');checkpoint.querySelector('summary').click();
+  assert.ok(checkpoint.open);
+  assert.notEqual(w.getComputedStyle(checkpoint.querySelector('summary [data-source-text]')).transform,'rotate(45deg)');
+ } finally {close();}
+});
 test('all primers render all interview lessons with valid quizzes and sources',()=>{
  const {w,d,close}=boot();
  try {
@@ -111,7 +120,7 @@ test('service worker caches every local dependency and falls back offline',async
  for(const file of [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map(x=>x[1]).filter(x=>!x.startsWith('http')))assert.ok(added.includes(`./${file}`));
  handlers.activate({waitUntil:p=>pending=p});await pending;assert.deepEqual(deleted,['android-field-guide-old']);
  cacheMap.set('./index.html','offline page');handlers.fetch({request:{url:'https://guide.test/',method:'GET',mode:'navigate'},respondWith:p=>pending=p});assert.equal(await pending,'offline page');
- cacheMap.set('https://guide.test/app.js?v=7','cached js');handlers.fetch({request:{url:'https://guide.test/app.js?v=7',method:'GET',mode:'cors'},respondWith:p=>pending=p});assert.equal(await pending,'cached js');
+ cacheMap.set('https://guide.test/app.js?v=8','cached js');handlers.fetch({request:{url:'https://guide.test/app.js?v=8',method:'GET',mode:'cors'},respondWith:p=>pending=p});assert.equal(await pending,'cached js');
 });
 test('skip link preserves current lesson and navigation focuses new heading',()=>{
  const {w,d,close}=boot({},'#android/compose');try{const link=d.querySelector('.skip-link');link.click();assert.equal(w.location.hash,'#android/compose');assert.equal(d.activeElement.id,'main');go(w,'design/rest');assert.equal(d.activeElement,d.querySelector('.lesson-heading'));}finally{close();}
