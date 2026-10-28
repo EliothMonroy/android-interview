@@ -242,20 +242,9 @@ pre code { display: block; min-width: min-content; }
 .course-table-wrap tbody tr:nth-child(even) { background: var(--surface-alt); }
 .course-table-wrap tbody tr:last-child td { border-bottom: 0; }
 .course-checkpoint summary { min-height: 44px; }
-.course-timeline { margin: 1.5rem 0; padding: .8rem; border: 1px solid var(--line); border-radius: 7px; font-size: .75rem; }
-.course-timeline figcaption { font-weight: 600; margin-bottom: 1rem; }
-.timeline-ticks { display: flex; justify-content: space-between; margin-left: 3.7rem; }
-.timeline-lanes { display: grid; grid-template-columns: 3.7rem minmax(0,1fr) minmax(0,1fr) 3.7rem; grid-template-rows: 2.4rem 2.4rem; align-items: center; }
-.timeline-label { grid-column: 1; }
-.profile-label, .profile-lane, .timeline-success { grid-row: 1; }
-.orders-label, .orders-lane, .timeline-failure { grid-row: 2; }
-.profile-lane { grid-column: 2 / 4; background: var(--accent); height: .65rem; border-radius: 3px; }
-.orders-lane { grid-column: 2; background: var(--muted); height: .65rem; border-radius: 3px; }
-.timeline-failure { grid-column: 3 / 5; padding-left: .3rem; }
-.timeline-success { grid-column: 4; padding-left: .3rem; }
-
 .lesson-group { color: var(--muted); font-size: .75rem; font-weight: 600; line-height: 1.5; min-width: 125px; padding: .5rem; align-self: center; }
-.course-navigation-note { background: var(--surface-alt); border-radius: 6px; padding: .8rem 1rem; font-size: .875rem; }
 .course-reference { font-size: .875rem; line-height: 1.65; margin: 1rem 0; overflow-wrap: anywhere; }
 .course-resources h3 { font-size: 1rem; }
 @media (min-width: 1100px) { .lesson-group { min-width: 0; margin-top: .6rem; padding: .3rem .7rem; } }
+
+.course-reference > span { display: block; }

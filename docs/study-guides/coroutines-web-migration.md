@@ -1,73 +1,44 @@
-# Kotlin Coroutines: PDF migration
+# Kotlin Coroutines web reference
 
-The 42-page reviewed edition (30 September 2026) is adapted as 37 native chapters with the two resource pages distributed into chapter footers at `#coroutines`. The five-week schedule (source pages 29–31) is intentionally omitted from the web course at the owner’s request. The original PDF, including that schedule, remains available as a download. Existing primer lessons and their review IDs are unchanged.
+The web course is an independently authored reference for Android interviews. The companion PDF informs topic selection; it is not the web app's structure, navigation, wording, or content contract. The PDF remains an optional, unchanged download that is cached offline.
 
-## Content fidelity
+## Editorial review · 28 October 2026
 
-- Source PDF SHA-256: `5879177006d2e6ba8895297ee637cf90fee21a91713dd139a9a81f1633ebf77f`.
-- The authoring source was recovered and its text compared with the repository PDF, page by page. All 42 pages matched after removing whitespace and the repeated running footer.
-- Outside the intentionally removed schedule pages, all paragraphs, headings, notes, 51 code blocks, 11 tables, the timeline, labs, worked solutions, glossary, verification limits, and 37 external links are retained. The reading sequence is grouped by learning prerequisites rather than physical PDF page order.
-- The 20 answer cues on page 33 are native disclosure controls. Formatting is represented as text runs; Kotlin generic types are never interpreted as HTML.
-- Original page references remain meaningful: each instructional chapter keeps its original source-page ID. Old resource-chapter links open a relevant chapter footer. Explicit page references link to the corresponding chapter, or to the original PDF for removed schedule pages; each chapter links back to its source PDF page.
-- The setup versions and original verification record are part of the dated edition. This migration does not claim a new execution of Kotlin/Android examples or update them to arbitrary dependency versions.
-
-## Validation
-
-`tests/fixtures/coroutines-pdf-manifest.json` records independently extracted PDF page text hashes, exact code hashes, table counts, and link URLs. The site test compares these with the actual rendered DOM for all 37 retained instructional chapters; schedule pages 29–31 are explicitly excluded. The independently extracted `coroutines-reference-manifest.json` additionally checks the complete bodies of source pages 41–42, collected from actual chapter footers, with all annotations and 37 links intact. The original full-page manifest and source PDF are unchanged. It also checks source PDF identity, per-example copying, revealable answers, chapter navigation, saved review compatibility, build output, and offline asset inclusion. No Python/PDF package is needed to run the app or its Node tests.
-
-Navigation order, grouping, resource placement, layout, line wrapping, and interaction controls differ from the PDF. The resource-page titles are no longer standalone chapter headings; all their reference content remains in footers. Content hashes deliberately ignore whitespace; code hashes do not. This catches lost words, missing generic types, dropped table cells, reordered material, and changed snippets. It does not establish Android device behavior or interview readiness.
-
-## Page-to-chapter map
-
-| PDF page | Group | Chapter |
+| Earlier material | Assessment | Web treatment |
 | --- | --- | --- |
-| 1 | START HERE | [Kotlin coroutines](../../index.html#coroutines/coroutines-01) |
-| 2 | START HERE | [How to use this guide](../../index.html#coroutines/coroutines-02) |
-| 3 | WEEK 1 | [Set up a small Kotlin lab](../../index.html#coroutines/coroutines-03) |
-| 4 | WEEK 1 | [Read Kotlin syntax confidently](../../index.html#coroutines/coroutines-04) |
-| 5 | WEEK 1 | [Lambdas, receivers, and generics](../../index.html#coroutines/coroutines-05) |
-| 6 | WEEK 1 | [Threads, blocking, and concurrency](../../index.html#coroutines/coroutines-06) |
-| 7 | WEEK 1 | [What suspend does](../../index.html#coroutines/coroutines-07) |
-| 8 | WEEK 2 | [Four essential entry points](../../index.html#coroutines/coroutines-08) |
-| 9 | WEEK 2 | [Decode your original program](../../index.html#coroutines/coroutines-09) |
-| 10 | WEEK 2 | [Scope, context, and the Job tree](../../index.html#coroutines/coroutines-10) |
-| 11 | WEEK 2 | [Structured concurrency](../../index.html#coroutines/coroutines-11) |
-| 12 | WEEK 3 | [Cancellation is cooperative](../../index.html#coroutines/coroutines-12) |
-| 13 | WEEK 3 | [Cleanup and deadlines](../../index.html#coroutines/coroutines-13) |
-| 14 | WEEK 3 | [Exception propagation](../../index.html#coroutines/coroutines-14) |
-| 15 | WEEK 3 | [coroutineScope vs supervisorScope](../../index.html#coroutines/coroutines-15) |
-| 16 | WEEK 3 | [Job vs SupervisorJob](../../index.html#coroutines/coroutines-16) |
-| 17 | WEEK 3 | [Dispatchers and main safety](../../index.html#coroutines/coroutines-17) |
-| 18 | WEEK 3 | [async vs withContext](../../index.html#coroutines/coroutines-18) |
-| 19 | WEEK 3 | [Model errors intentionally](../../index.html#coroutines/coroutines-19) |
-| 20 | WEEK 3 | [Complete partial-success loader](../../index.html#coroutines/coroutines-20) |
-| 21 | WEEK 4 | [Flow: a sequence over time](../../index.html#coroutines/coroutines-21) |
-| 22 | WEEK 4 | [Flow operators and errors](../../index.html#coroutines/coroutines-22) |
-| 23 | WEEK 4 | [StateFlow: the current state](../../index.html#coroutines/coroutines-23) |
-| 24 | WEEK 4 | [SharedFlow: broadcast values](../../index.html#coroutines/coroutines-24) |
-| 25 | WEEK 4 | [Android: a ViewModel owns loading](../../index.html#coroutines/coroutines-25) |
-| 26 | WEEK 4 | [Android: collect with the lifecycle](../../index.html#coroutines/coroutines-26) |
-| 27 | WEEK 5 | [Coroutine tests: virtual time](../../index.html#coroutines/coroutines-27) |
-| 28 | WEEK 5 | [Test the failure policy](../../index.html#coroutines/coroutines-28) |
-| 29 | PDF ONLY | Five-week schedule — intentionally omitted from the web course |
-| 30 | PDF ONLY | Five-week schedule — intentionally omitted from the web course |
-| 31 | PDF ONLY | Five-week schedule — intentionally omitted from the web course |
-| 32 | PRACTICE | [Progressive labs](../../index.html#coroutines/coroutines-32) |
-| 33 | PRACTICE | [Checkpoints with answer cues](../../index.html#coroutines/coroutines-33) |
-| 34 | REFERENCE | [Quick reference and glossary](../../index.html#coroutines/coroutines-34) |
-| 35 | WORKED PRACTICE | [Run snippets and discover tests](../../index.html#coroutines/coroutines-35) |
-| 36 | WORKED PRACTICE | [Worked solution: the failure matrix](../../index.html#coroutines/coroutines-36) |
-| 37 | WORKED PRACTICE | [Worked solution: streams](../../index.html#coroutines/coroutines-37) |
-| 38 | WORKED PRACTICE | [Worked solution: shared state](../../index.html#coroutines/coroutines-38) |
-| 39 | WORKED PRACTICE | [Worked solution: Android unit tests](../../index.html#coroutines/coroutines-39) |
-| 40 | REVIEW | [Readiness review and next steps](../../index.html#coroutines/coroutines-40) |
-| 41 | CHAPTER FOOTERS | [Foundations resources](../../index.html#coroutines/coroutines-03/resources) |
-| 42 | CHAPTER FOOTERS | [Streams resources](../../index.html#coroutines/coroutines-21/resources) |
+| Ownership, suspension, cancellation, structured concurrency, and async/await | Useful concepts; retain with precise API boundaries | Rewrite around explanations, comparisons, and chapter-local examples; verify against official Kotlin documentation |
+| Ordinary async failure versus supervised failure | Essential distinction | Explain that an ordinary child can cancel its parent before await; supervision does not recover an exception escaping its block |
+| Dispatchers, main safety, Flow, lifecycle collection, and coroutine testing | Useful Android interview material | Retain as reference topics, including current Views and Compose collection guidance |
+| Page references and the How to use this guide reading map | Describe the PDF, not the web navigation | Remove page-number interpretation and replace the reading map with a conceptual mental model |
+| Week labels, schedules, exercises, capstone requirements, lab setup, and worked solutions | Workbook structure, unsuitable for the requested reference | Remove setup/lab chapters; rewrite reusable testing and shared-state information as conceptual chapters |
+| Examples depending on fixtures from another source page | Incomplete when read independently | Define supporting functions and types locally, or explicitly identify the API/project context of a focused snippet |
+| Dated dependency pins and execution claims | Do not establish compatibility or validation of the web examples | Remove pins and inherited execution claims; document validation performed on this branch |
+| Numbered PDF resource lists and source-page fidelity assertions | Enforce a copy rather than a reference | Replace with relevant named official links per chapter and functional/editorial tests |
 
-## Organization review
+## Reading structure
 
-A dedicated content-review subagent found the concepts on source pages 3–28 already form a sound teaching sequence. The current course omits the five-week plan and places runnable snippet/JUnit setup (source page 35) beside the initial lab (page 3). Practice and worked solutions now remain adjacent; the quick reference follows them, then readiness review.
+The reference has 32 chapters covering foundations, ownership, cancellation and failure, execution and results, streams, Android lifetime, testing, and decision-making. Kotlin syntax context remains available, while the Kotlin Primer supplies the broader language reference. Chapters contain explanatory text, focused Kotlin examples, useful comparisons, and selected revealable interview answers. No external project, notebook, or lab sequence is required to understand them.
 
-Group labels distinguish learning order from preserved PDF page numbers. Removed schedule routes use the existing unknown-chapter fallback to the course introduction. Saved review IDs are retained; removed chapters do not count toward current course progress.
+The testing chapters explain how coroutine behavior can be verified; they are informational examples, not instructions for constructing a complete sample application. Android snippets identify their relevant library or screen context. In this revision, 22 standalone Kotlin examples compiled, 20 console examples ran successfully, and two coroutine-test examples compiled and passed their JUnit tests. The three Android-dependent snippets were statically reviewed with their context stated; they were not compiled or executed on a device.
 
-Resources are selected from both explicit citations and the content review's topic mapping. Related links and their original annotations appear under Go deeper for the current chapter; the dated documentation note remains available there. Legacy routes 41/42 redirect the view to related chapter footers without deleting review keys or marking the destination as reviewed.
+## Navigation and review compatibility
+
+Retained conceptual topics keep their existing lesson IDs. Numbering displayed in navigation follows the current reading order and has no PDF-page meaning. Removed review IDs remain in browser storage but do not count toward current completion. Visiting a removed ID does not transfer its reviewed status to a replacement topic.
+
+| Former ID | Current destination |
+| --- | --- |
+| coroutines-03 | coroutines-07 · suspension |
+| coroutines-29, coroutines-30, coroutines-31 | coroutines-01 · overview |
+| coroutines-32, coroutines-33 | coroutines-40 · interview decision review |
+| coroutines-35 | coroutines-27 · coroutine testing |
+| coroutines-36 | coroutines-28 · failure policies |
+| coroutines-41 | coroutines-07 resources footer |
+| coroutines-42 | coroutines-21 resources footer |
+
+References to the former original-program walkthrough and worked solutions are rewritten as standalone explanations. Their IDs remain useful, but the web content no longer assumes the reader has a particular program or prior fixture.
+
+## Source policy and validation
+
+The authoring PDF and its historical manifests are provenance only. Their text hashes must not constrain this independently authored reference or be updated to make rewritten prose appear identical. The current site tests cover chapter rendering, topical navigation, chapter-specific HTTPS sources, removal of workbook/page scaffolding, code-copy fidelity, revealable answers, old links, saved progress, themes, packaging, and offline caching. PDF byte identity and packaging remain separate checks.
+
+The semantic review uses primary documentation, including [Kotlin coroutine context](https://kotlinlang.org/docs/coroutine-context-and-dispatchers.html), [exception handling](https://kotlinlang.org/docs/exception-handling.html), [coroutine testing](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/), and [Android coroutine best practices](https://developer.android.com/kotlin/coroutines/coroutines-best-practices). Each chapter links to its own relevant sources. These Kotlin checks are separate from browser rendering tests; neither establishes Android device behavior or interview readiness.

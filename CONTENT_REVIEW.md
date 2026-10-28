@@ -70,3 +70,9 @@ There are now 102 primer lessons (31 Android) plus 40 coroutines chapters. Chang
 ## Study plan removal · 28 October 2026
 
 Removed the five-week study-plan group and its three schedule chapters (source pages 29–31) from the web course at the owner’s request. The remaining 37 chapters retain their stable IDs, source text, examples, checkpoints, and resource footers. The downloadable PDF and source manifests are unchanged; removed review IDs remain stored but do not count toward current progress.
+
+## Independent coroutines reference · 28 October 2026
+
+The former PDF migration confused source-page navigation and workbook instructions with a web course. The current editorial pass replaces it with 32 independently authored informational chapters, removes lab/setup/exercise scaffolding, gives examples local context, and uses named official chapter sources. Existing conceptual IDs remain; retired workbook routes open related reference topics without transferring reviewed status. The companion PDF remains unchanged and optional. See the editorial assessment in `docs/study-guides/coroutines-web-migration.md` for what remains valid, what was removed, and the validation boundary.
+
+Independent technical review found the existing coroutine rules largely sound; the defects addressed are PDF navigation assumptions, workbook structure, and cross-chapter snippet dependencies. This branch additionally compiled 22 standalone Kotlin examples, ran 20 console examples, and compiled/passed two coroutine-test examples. Android-dependent snippets remain statically reviewed only.
