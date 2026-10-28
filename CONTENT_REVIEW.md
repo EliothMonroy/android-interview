@@ -66,3 +66,7 @@ Added three Android lessons answering “What is MVVM?”, “What is MVI?”, a
 A separate subagent reviewed coroutines prerequisites and order. The resulting 40-chapter course groups the study schedule after orientation, moves executable setup earlier, keeps worked solutions after coroutine testing, and puts the complete reference information from the former two resource chapters into relevant footers. PDF content, code, annotations, links, stable instructional IDs, and existing review history are retained. See the migration document for the revised fidelity checks.
 
 There are now 102 primer lessons (31 Android) plus 40 coroutines chapters. Changes are delivered through an isolated managed worktree and a PR; production publication waits for review and merge. Kotlin snippets remain contextual teaching examples, not a compiled Android project.
+
+## Study plan removal · 28 October 2026
+
+Removed the five-week study-plan group and its three schedule chapters (source pages 29–31) from the web course at the owner’s request. The remaining 37 chapters retain their stable IDs, source text, examples, checkpoints, and resource footers. The downloadable PDF and source manifests are unchanged; removed review IDs remain stored but do not count toward current progress.
