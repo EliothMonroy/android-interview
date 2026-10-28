@@ -1,19 +1,19 @@
 # Kotlin Coroutines: PDF migration
 
-The complete 42-page reviewed edition (30 September 2026) is available as 40 native chapters with the two resource pages distributed into chapter footers at `#coroutines`. The original PDF remains available as a download. Existing primer lessons and their review IDs are unchanged.
+The 42-page reviewed edition (30 September 2026) is adapted as 37 native chapters with the two resource pages distributed into chapter footers at `#coroutines`. The five-week schedule (source pages 29–31) is intentionally omitted from the web course at the owner’s request. The original PDF, including that schedule, remains available as a download. Existing primer lessons and their review IDs are unchanged.
 
 ## Content fidelity
 
 - Source PDF SHA-256: `5879177006d2e6ba8895297ee637cf90fee21a91713dd139a9a81f1633ebf77f`.
 - The authoring source was recovered and its text compared with the repository PDF, page by page. All 42 pages matched after removing whitespace and the repeated running footer.
-- All paragraphs, headings, notes, 51 code blocks, 14 tables, the timeline, five-week schedule, labs, worked solutions, glossary, verification limits, and 37 external links are retained. The reading sequence is grouped by learning prerequisites rather than physical PDF page order.
+- Outside the intentionally removed schedule pages, all paragraphs, headings, notes, 51 code blocks, 11 tables, the timeline, labs, worked solutions, glossary, verification limits, and 37 external links are retained. The reading sequence is grouped by learning prerequisites rather than physical PDF page order.
 - The 20 answer cues on page 33 are native disclosure controls. Formatting is represented as text runs; Kotlin generic types are never interpreted as HTML.
-- Original page references remain meaningful: each instructional chapter keeps its original source-page ID. Old resource-chapter links open a relevant chapter footer. Explicit page references link to the corresponding chapter; each chapter links back to its source PDF page.
+- Original page references remain meaningful: each instructional chapter keeps its original source-page ID. Old resource-chapter links open a relevant chapter footer. Explicit page references link to the corresponding chapter, or to the original PDF for removed schedule pages; each chapter links back to its source PDF page.
 - The setup versions and original verification record are part of the dated edition. This migration does not claim a new execution of Kotlin/Android examples or update them to arbitrary dependency versions.
 
 ## Validation
 
-`tests/fixtures/coroutines-pdf-manifest.json` records independently extracted PDF page text hashes, exact code hashes, table counts, and link URLs. The site test compares these with the actual rendered DOM for all 40 instructional chapters. The independently extracted `coroutines-reference-manifest.json` additionally checks the complete bodies of source pages 41–42, collected from actual chapter footers, with all annotations and 37 links intact. The original full-page manifest and source PDF are unchanged. It also checks source PDF identity, per-example copying, revealable answers, chapter navigation, saved review compatibility, build output, and offline asset inclusion. No Python/PDF package is needed to run the app or its Node tests.
+`tests/fixtures/coroutines-pdf-manifest.json` records independently extracted PDF page text hashes, exact code hashes, table counts, and link URLs. The site test compares these with the actual rendered DOM for all 37 retained instructional chapters; schedule pages 29–31 are explicitly excluded. The independently extracted `coroutines-reference-manifest.json` additionally checks the complete bodies of source pages 41–42, collected from actual chapter footers, with all annotations and 37 links intact. The original full-page manifest and source PDF are unchanged. It also checks source PDF identity, per-example copying, revealable answers, chapter navigation, saved review compatibility, build output, and offline asset inclusion. No Python/PDF package is needed to run the app or its Node tests.
 
 Navigation order, grouping, resource placement, layout, line wrapping, and interaction controls differ from the PDF. The resource-page titles are no longer standalone chapter headings; all their reference content remains in footers. Content hashes deliberately ignore whitespace; code hashes do not. This catches lost words, missing generic types, dropped table cells, reordered material, and changed snippets. It does not establish Android device behavior or interview readiness.
 
@@ -49,9 +49,9 @@ Navigation order, grouping, resource placement, layout, line wrapping, and inter
 | 26 | WEEK 4 | [Android: collect with the lifecycle](../../index.html#coroutines/coroutines-26) |
 | 27 | WEEK 5 | [Coroutine tests: virtual time](../../index.html#coroutines/coroutines-27) |
 | 28 | WEEK 5 | [Test the failure policy](../../index.html#coroutines/coroutines-28) |
-| 29 | SCHEDULE | [Five-week schedule / weeks 1-2](../../index.html#coroutines/coroutines-29) |
-| 30 | SCHEDULE | [Five-week schedule / weeks 3-4](../../index.html#coroutines/coroutines-30) |
-| 31 | SCHEDULE | [Five-week schedule / week 5](../../index.html#coroutines/coroutines-31) |
+| 29 | PDF ONLY | Five-week schedule — intentionally omitted from the web course |
+| 30 | PDF ONLY | Five-week schedule — intentionally omitted from the web course |
+| 31 | PDF ONLY | Five-week schedule — intentionally omitted from the web course |
 | 32 | PRACTICE | [Progressive labs](../../index.html#coroutines/coroutines-32) |
 | 33 | PRACTICE | [Checkpoints with answer cues](../../index.html#coroutines/coroutines-33) |
 | 34 | REFERENCE | [Quick reference and glossary](../../index.html#coroutines/coroutines-34) |
@@ -66,8 +66,8 @@ Navigation order, grouping, resource placement, layout, line wrapping, and inter
 
 ## Organization review
 
-A dedicated content-review subagent found the concepts on source pages 3–28 already form a sound teaching sequence. The revision groups the five-week plan immediately after orientation and moves runnable snippet/JUnit setup (source page 35) beside the initial lab (page 3). Practice and worked solutions now remain adjacent; the quick reference follows them, then readiness review.
+A dedicated content-review subagent found the concepts on source pages 3–28 already form a sound teaching sequence. The current course omits the five-week plan and places runnable snippet/JUnit setup (source page 35) beside the initial lab (page 3). Practice and worked solutions now remain adjacent; the quick reference follows them, then readiness review.
 
-The plan is a roadmap with forward references. A visible note explains that test-based worked solutions require the lab setup and virtual-time chapter, or can be revisited in week 5. Group labels distinguish learning order from preserved PDF page numbers.
+Group labels distinguish learning order from preserved PDF page numbers. Removed schedule routes use the existing unknown-chapter fallback to the course introduction. Saved review IDs are retained; removed chapters do not count toward current course progress.
 
 Resources are selected from both explicit citations and the content review's topic mapping. Related links and their original annotations appear under Go deeper for the current chapter; the dated documentation note remains available there. Legacy routes 41/42 redirect the view to related chapter footers without deleting review keys or marking the destination as reviewed.

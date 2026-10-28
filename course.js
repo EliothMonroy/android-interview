@@ -2,7 +2,7 @@
 (() => {
  'use strict';
  const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const chapterLink = (page,currentPage) => Number(page)>40 ? `#coroutines/coroutines-${String(currentPage).padStart(2,'0')}/resources` : `#coroutines/coroutines-${String(page).padStart(2,'0')}`;
+ const chapterLink = (page,currentPage) => [29,30,31].includes(Number(page)) ? `docs/study-guides/kotlin-coroutines-study-guide.pdf#page=${Number(page)}` : Number(page)>40 ? `#coroutines/coroutines-${String(currentPage).padStart(2,'0')}/resources` : `#coroutines/coroutines-${String(page).padStart(2,'0')}`;
  function text(value,currentPage) {
   return escape(value).replace(/\b(pages?\s+)(\d{1,2})(?=\b)/gi, (match,label,page) =>
    Number(page)>=1&&Number(page)<=42 ? `${label}<a href="${chapterLink(page,currentPage)}">${page}</a>` : match);
