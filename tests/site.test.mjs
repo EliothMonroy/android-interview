@@ -79,7 +79,7 @@ test('the course omits the study plan while keeping prerequisites, old links and
   assert.equal(d.activeElement.id,'chapter-resources');assert.match(d.getElementById('course-route-note').textContent,/footer/i);
   go(w,'coroutines/coroutines-35');assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'true');
   go(w,'coroutines/coroutines-08');const resourcesLink=d.querySelector('a[href="#coroutines/coroutines-08/resources"]');assert.ok(resourcesLink);go(w,resourcesLink.getAttribute('href').slice(1));assert.equal(d.activeElement.id,'chapter-resources');
-  go(w,'coroutines/coroutines-02');d.getElementById('next').click();w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(d.querySelector('h2').textContent,'Set up a small Kotlin lab');
+  go(w,'coroutines/coroutines-02');assert.ok(d.querySelector('a[href="docs/study-guides/kotlin-coroutines-study-guide.pdf#page=29"]'),'removed schedule page references must open the source PDF');d.getElementById('next').click();w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(d.querySelector('h2').textContent,'Set up a small Kotlin lab');
   go(w,'coroutines/coroutines-03');d.getElementById('next').click();w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(d.querySelector('h2').textContent,'Run snippets and discover tests');
   assert.deepEqual(JSON.parse(w.localStorage.getItem('aifg-completed')),['coroutines/coroutines-29','coroutines/coroutines-41','coroutines/coroutines-35','android/compose']);
  }finally{close();}

@@ -8,7 +8,7 @@ The 42-page reviewed edition (30 September 2026) is adapted as 37 native chapter
 - The authoring source was recovered and its text compared with the repository PDF, page by page. All 42 pages matched after removing whitespace and the repeated running footer.
 - Outside the intentionally removed schedule pages, all paragraphs, headings, notes, 51 code blocks, 11 tables, the timeline, labs, worked solutions, glossary, verification limits, and 37 external links are retained. The reading sequence is grouped by learning prerequisites rather than physical PDF page order.
 - The 20 answer cues on page 33 are native disclosure controls. Formatting is represented as text runs; Kotlin generic types are never interpreted as HTML.
-- Original page references remain meaningful: each instructional chapter keeps its original source-page ID. Old resource-chapter links open a relevant chapter footer. Explicit page references link to the corresponding chapter; each chapter links back to its source PDF page.
+- Original page references remain meaningful: each instructional chapter keeps its original source-page ID. Old resource-chapter links open a relevant chapter footer. Explicit page references link to the corresponding chapter, or to the original PDF for removed schedule pages; each chapter links back to its source PDF page.
 - The setup versions and original verification record are part of the dated edition. This migration does not claim a new execution of Kotlin/Android examples or update them to arbitrary dependency versions.
 
 ## Validation
