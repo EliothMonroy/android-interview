@@ -6,7 +6,6 @@ import vm from 'node:vm';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 const pdfManifest=JSON.parse(await readFile('tests/fixtures/coroutines-pdf-manifest.json','utf8'));
-const referenceManifest=JSON.parse(await readFile('tests/fixtures/coroutines-reference-manifest.json','utf8'));
 const html=await readFile('index.html','utf8');
 const scriptPaths=[...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map(match=>match[1].split('?')[0]);
 const code=await Promise.all(scriptPaths.map(f=>readFile(f,'utf8')));
@@ -20,95 +19,66 @@ function boot(saved={},hash='') {
  return {w,d:w.document,close:()=>w.close()};
 }
 function go(w,hash){w.location.hash=hash;w.dispatchEvent(new w.HashChangeEvent('hashchange'));}
-test('instructional PDF pages retain every word and snippet after course reorganization',async()=>{
+test('the coroutines web reference is independent of the workbook and renders all topics',()=>{
  const {w,d,close}=boot({},'#coroutines');
- const sha=text=>createHash('sha256').update(text).digest('hex');
  try {
-  assert.equal(sha(await readFile('docs/study-guides/kotlin-coroutines-study-guide.pdf')),pdfManifest.pdfSha256);
-  assert.equal(d.querySelector('h1').textContent,'Kotlin Coroutines');
-  assert.equal(d.querySelectorAll('#navigation button').length,6);
-  for(const page of pdfManifest.pages.filter(p=>p.page<=40&&![29,30,31].includes(p.page))){
-   go(w,`coroutines/${page.id}`);
-   assert.equal(d.querySelector('h2').textContent,page.title);
-   const article=d.querySelector('.course-lesson');assert.ok(article,`page ${page.page} must render as web content`);
-   const text=[...article.querySelectorAll('[data-source-text]')].map(n=>n.textContent).join('');
-   assert.equal(sha(text.replace(/\s/g,'')),page.textSha256,`page ${page.page}: original content lost or altered`);
-   assert.deepEqual([...article.querySelectorAll('pre code')].map(n=>sha(n.textContent)),page.codeSha256);
-   assert.equal(article.querySelectorAll('table').length,page.tableCount);
-   assert.deepEqual([...article.querySelectorAll('a[data-source-link]')].map(a=>a.href),page.links);
+  const course=w.PRIMERS.find(s=>s.id==='coroutines');
+  assert.equal(course.lessons.length,32);
+  const ids=Array.from(course.lessons,l=>l.id);assert.equal(new Set(ids).size,ids.length);
+  assert.deepEqual([...d.querySelectorAll('#chapter-picker option')].map(o=>o.value),ids);
+  assert.deepEqual(Array.from(course.groups).flatMap(g=>Array.from(g.ids)),ids);
+  for(const chapter of course.lessons){
+   assert.equal(chapter.sourcePage,undefined);assert.ok(chapter.sources.length);
+   go(w,`coroutines/${chapter.id}`);
+   assert.equal(d.querySelector('h2').textContent,chapter.title);
+   const article=d.querySelector('.course-lesson');
+   assert.ok(article.querySelectorAll('p').length>=2,chapter.id);
+   assert.doesNotMatch(article.textContent,/\b(?:pages?\s+\d|source page|code ?lab|exercise\s+\d|week\s+\d|capstone|worked solution|fixture on)\b/i,chapter.id);
+   assert.equal(article.querySelector('a[href*=".pdf"]'),null);
+   const snippets=chapter.blocks.filter(b=>b.type==='code');
+   assert.deepEqual([...article.querySelectorAll('pre code')].map(n=>n.textContent),Array.from(snippets,b=>b.code));
+   const sources=[...d.querySelectorAll('#chapter-resources a[data-reference-link]')];assert.equal(sources.length,chapter.sources.length);
+   for(const link of sources){assert.ok(/^https:\/\//.test(link.href));assert.equal(link.target,'_blank');assert.equal(link.rel,'noopener noreferrer');}
+   for(const link of d.querySelectorAll('.course-content a[href^="#coroutines/"]'))assert.ok(ids.includes(link.hash.split('/')[1]),link.href);
   }
- } finally {close();}
-});
-test('course resources live in relevant footers and preserve both complete source reference pages',()=>{
- const {w,d,close}=boot({},'#coroutines');const found=new Map();
- try {
-  for(const page of pdfManifest.pages.filter(p=>p.page<=40&&![29,30,31].includes(p.page))){
-   go(w,`coroutines/${page.id}`);
-   const footer=d.getElementById('chapter-resources');assert.ok(footer);
-   for(const node of footer.querySelectorAll('[data-resource-id]'))found.set(node.dataset.resourceId,{text:node.textContent,links:[...node.querySelectorAll('a[data-source-link]')].map(a=>a.href)});
-  }
-  for(const source of referenceManifest){
-   const blocks=source.blockIds.map(id=>{assert.ok(found.has(id),`missing original reference block ${id}`);return found.get(id);});
-   assert.equal(createHash('sha256').update(blocks.map(b=>b.text).join('').replace(/\s/g,'')).digest('hex'),source.bodySha256);
-   assert.deepEqual(blocks.flatMap(b=>b.links),pdfManifest.pages.find(p=>p.page===source.sourcePage).links);
-  }
-  go(w,'coroutines/coroutines-03');assert.ok(d.querySelector('#chapter-resources a[href="https://kotlinlang.org/docs/coroutines-basics.html"]'));
-  assert.equal(d.querySelector('#chapter-resources a[href$="/-shared-flow/"]'),null);
-  go(w,'coroutines/coroutines-23');assert.ok(d.querySelector('#chapter-resources a[href$="/-state-flow/"]'));
  }finally{close();}
 });
-test('the course omits the study plan while keeping prerequisites, old links and progress valid',()=>{
- const {w,d,close}=boot({'aifg-completed':'["coroutines/coroutines-29","coroutines/coroutines-41","coroutines/coroutines-35","android/compose"]'},'#coroutines');
+test('saved workbook links open related topics without migrating review history',()=>{
+ const saved=['coroutines/coroutines-03','coroutines/coroutines-35','coroutines/coroutines-41','coroutines/coroutines-08','android/compose'];
+ const {w,d,close}=boot({'aifg-completed':JSON.stringify(saved)},'#coroutines');
  try {
-  const options=[...d.querySelectorAll('#chapter-picker option')].map(o=>o.value);
-  assert.equal(options.length,37);
-  assert.deepEqual(options.slice(0,5),['coroutines-01','coroutines-02','coroutines-03','coroutines-35','coroutines-04']);
-  assert.ok(options.indexOf('coroutines-28')<options.indexOf('coroutines-36'));
-  assert.ok(options.indexOf('coroutines-39')<options.indexOf('coroutines-34'));
-  assert.equal(options.at(-1),'coroutines-40');
-  assert.equal(d.querySelectorAll('#chapter-picker optgroup[label="FIVE-WEEK STUDY PLAN"]').length,0);
-  for(const id of ['coroutines-29','coroutines-30','coroutines-31']) {
-   assert.ok(!options.includes(id));assert.equal(d.querySelector(`[data-lesson="${id}"]`),null);
-   go(w,`coroutines/${id}`);assert.equal(d.querySelector('h2').textContent,'Kotlin coroutines');
+  for(const [oldId,target] of Object.entries({'03':'07','29':'01','30':'01','31':'01','32':'40','33':'40','35':'27','36':'28'})){
+   assert.equal(d.querySelector(`[data-lesson="coroutines-${oldId}"]`),null);
+   go(w,`coroutines/coroutines-${oldId}`);
+   assert.equal(d.querySelector('[aria-current="true"]').dataset.lesson,`coroutines-${target}`);
    assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'false');
-   assert.equal(d.querySelector('.progress-track').getAttribute('aria-valuenow'),'1');
+   assert.equal(d.activeElement,d.querySelector('h2'));
   }
-  assert.equal(d.querySelector('[data-lesson="coroutines-41"]'),null);
-  go(w,'coroutines/coroutines-41');assert.equal(d.querySelector('h2').textContent,'Set up a small Kotlin lab');
-  assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'false');
-  assert.equal(d.activeElement.id,'chapter-resources');assert.match(d.getElementById('course-route-note').textContent,/footer/i);
-  go(w,'coroutines/coroutines-35');assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'true');
-  go(w,'coroutines/coroutines-08');const resourcesLink=d.querySelector('a[href="#coroutines/coroutines-08/resources"]');assert.ok(resourcesLink);go(w,resourcesLink.getAttribute('href').slice(1));assert.equal(d.activeElement.id,'chapter-resources');
-  go(w,'coroutines/coroutines-02');assert.ok(d.querySelector('a[href="docs/study-guides/kotlin-coroutines-study-guide.pdf#page=29"]'),'removed schedule page references must open the source PDF');d.getElementById('next').click();w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(d.querySelector('h2').textContent,'Set up a small Kotlin lab');
-  go(w,'coroutines/coroutines-03');d.getElementById('next').click();w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(d.querySelector('h2').textContent,'Run snippets and discover tests');
-  assert.deepEqual(JSON.parse(w.localStorage.getItem('aifg-completed')),['coroutines/coroutines-29','coroutines/coroutines-41','coroutines/coroutines-35','android/compose']);
+  for(const [oldId,target] of [['41','07'],['42','21']]){
+   go(w,`coroutines/coroutines-${oldId}`);assert.equal(d.querySelector('[aria-current="true"]').dataset.lesson,`coroutines-${target}`);
+   assert.equal(d.activeElement.id,'chapter-resources');
+  }
+  go(w,'coroutines/coroutines-08');assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'true');
+  assert.equal(d.querySelector('.progress-track').getAttribute('aria-valuenow'),'1');
+  assert.deepEqual(JSON.parse(w.localStorage.getItem('aifg-completed')),saved);
  }finally{close();}
 });
-test('course navigation, independent review progress, checkpoints and per-example copying work',async()=>{
- const {w,d,close}=boot({'aifg-completed':'["kotlin/kotlin-null"]'},'#coroutines/coroutines-03');
+test('reference navigation, copying, interview answers and independent progress work',async()=>{
+ const {w,d,close}=boot({'aifg-completed':'["kotlin/kotlin-null"]'},'#coroutines/coroutines-08');
  try {
   let copied;Object.defineProperty(w.navigator,'clipboard',{value:{writeText:async text=>{copied=text;}}});
-  const buttons=d.querySelectorAll('[data-copy-code]');assert.equal(buttons.length,2);
-  const second=d.querySelectorAll('pre code')[1].textContent;await buttons[1].onclick();assert.equal(copied,second);
-  d.getElementById('mark').click();
-  assert.deepEqual(JSON.parse(w.localStorage.getItem('aifg-completed')),['kotlin/kotlin-null','coroutines/coroutines-03']);
-  const picker=d.getElementById('chapter-picker');picker.value='coroutines-33';picker.onchange();w.dispatchEvent(new w.HashChangeEvent('hashchange'));
-  const checkpoint=d.querySelector('.course-checkpoint');assert.ok(checkpoint);assert.equal(checkpoint.open,false);
-  checkpoint.querySelector('summary').click();assert.equal(checkpoint.open,true);assert.match(checkpoint.querySelector('p').textContent,/permits suspension/);
+  const button=d.querySelector('[data-copy-code]');assert.ok(button);await button.onclick();assert.equal(copied,d.querySelector('pre code').textContent);
+  d.getElementById('mark').click();assert.deepEqual(JSON.parse(w.localStorage.getItem('aifg-completed')),['kotlin/kotlin-null','coroutines/coroutines-08']);
+  const picker=d.getElementById('chapter-picker');picker.value='coroutines-18';picker.onchange();w.dispatchEvent(new w.HashChangeEvent('hashchange'));
   assert.equal(d.activeElement,d.querySelector('h2'));
-  go(w,'coroutines/coroutines-35');const setup=d.querySelector('a[href="#coroutines/coroutines-27"]');assert.ok(setup,'page references must link to native chapters');
+  const course=w.PRIMERS.find(s=>s.id==='coroutines'),questionChapter=course.lessons.find(l=>l.blocks.some(b=>b.type==='checkpoint'));assert.ok(questionChapter);
+  go(w,`coroutines/${questionChapter.id}`);const checkpoint=d.querySelector('.course-checkpoint');assert.equal(checkpoint.open,false);checkpoint.querySelector('summary').click();assert.equal(checkpoint.open,true);
+  const style=d.createElement('style');style.textContent=await readFile('styles.css','utf8');d.head.appendChild(style);assert.notEqual(w.getComputedStyle(checkpoint.querySelector('summary > span')).transform,'rotate(45deg)');
+  go(w,'coroutines/coroutines-08/resources');assert.equal(d.activeElement.id,'chapter-resources');
+  go(w,'coroutines/coroutines-02');d.getElementById('next').click();w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(d.querySelector('[aria-current="true"]').dataset.lesson,'coroutines-04');
+  d.getElementById('previous').click();w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(d.querySelector('[aria-current="true"]').dataset.lesson,'coroutines-02');
   go(w,'coroutines/coroutines-40');d.getElementById('next').click();w.dispatchEvent(new w.HashChangeEvent('hashchange'));assert.equal(d.querySelector('h1').textContent,'Data Structures Primer');
-  go(w,'kotlin/kotlin-null');assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'true');
- } finally {close();}
-});
-test('opening a checkpoint keeps its question text upright',async()=>{
- const {w,d,close}=boot({},'#coroutines/coroutines-33');
- try {
-  const style=d.createElement('style');style.textContent=await readFile('styles.css','utf8');d.head.appendChild(style);
-  const checkpoint=d.querySelector('.course-checkpoint');checkpoint.querySelector('summary').click();
-  assert.ok(checkpoint.open);
-  assert.notEqual(w.getComputedStyle(checkpoint.querySelector('summary [data-source-text]')).transform,'rotate(45deg)');
- } finally {close();}
+ }finally{close();}
 });
 test('all primers render all interview lessons with valid quizzes and sources',()=>{
  const {w,d,close}=boot();
@@ -144,6 +114,7 @@ test('Kotlin lessons expose the packaged coroutines PDF in a new tab',async()=>{
  } finally {close();}
  execFileSync(process.execPath,['scripts/build.mjs']);
  assert.deepEqual(await readFile('dist/docs/study-guides/kotlin-coroutines-study-guide.pdf'),await readFile('docs/study-guides/kotlin-coroutines-study-guide.pdf'));
+ assert.equal(createHash('sha256').update(await readFile('docs/study-guides/kotlin-coroutines-study-guide.pdf')).digest('hex'),pdfManifest.pdfSha256);
  for(const script of scriptPaths)assert.deepEqual(await readFile(`dist/${script}`),await readFile(script));
 });
 test('offline PDF navigation serves the document instead of the app shell',async()=>{
@@ -166,7 +137,7 @@ test('service worker caches every local dependency and falls back offline',async
  for(const file of [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map(x=>x[1]).filter(x=>!x.startsWith('http')))assert.ok(added.includes(`./${file}`));
  handlers.activate({waitUntil:p=>pending=p});await pending;assert.deepEqual(deleted,['android-field-guide-old']);
  cacheMap.set('./index.html','offline page');handlers.fetch({request:{url:'https://guide.test/',method:'GET',mode:'navigate'},respondWith:p=>pending=p});assert.equal(await pending,'offline page');
- cacheMap.set('https://guide.test/app.js?v=10','cached js');handlers.fetch({request:{url:'https://guide.test/app.js?v=10',method:'GET',mode:'cors'},respondWith:p=>pending=p});assert.equal(await pending,'cached js');
+ cacheMap.set('https://guide.test/app.js?v=11','cached js');handlers.fetch({request:{url:'https://guide.test/app.js?v=11',method:'GET',mode:'cors'},respondWith:p=>pending=p});assert.equal(await pending,'cached js');
 });
 test('skip link preserves current lesson and navigation focuses new heading',()=>{
  const {w,d,close}=boot({},'#android/compose');try{const link=d.querySelector('.skip-link');link.click();assert.equal(w.location.hash,'#android/compose');assert.equal(d.activeElement.id,'main');go(w,'design/rest');assert.equal(d.activeElement,d.querySelector('.lesson-heading'));}finally{close();}
@@ -179,7 +150,7 @@ test('optional model context tool uses reviewed state and rejects invalid input'
 test('expanded syllabus preserves original IDs and saved review history',()=>{
  const {w,d,close}=boot({'aifg-completed':'["kotlin/kotlin-null","android/compose","design/graphql"]'},'#design/graphql');
  try {
-  const expected={kotlin:19,coroutines:37,structures:12,algorithms:19,android:31,design:21};
+  const expected={kotlin:19,coroutines:32,structures:12,algorithms:19,android:31,design:21};
   for(const s of w.PRIMERS)assert.equal(s.lessons.length,expected[s.id]);
   assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'true');
   go(w,'android/compose');assert.equal(d.getElementById('mark').getAttribute('aria-pressed'),'true');

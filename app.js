@@ -7,7 +7,7 @@ const read = (key, fallback) => { try { return JSON.parse(localStorage.getItem(k
 const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { notify('Storage is unavailable. Changes last for this visit.'); } };
 let completed = new Set(read('aifg-completed', []).filter?.(x => typeof x === 'string') || []);
 let section, lesson;
-let resourceRoute=false, resourceAlias=false;
+let resourceRoute=false, resourceAlias=false, chapterRedirect=false;
 let feedback = {};
 let toastTimer;
 function notify(message) { $('toast').textContent=message; $('toast').hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(() => $('toast').hidden=true,3000); }
@@ -16,11 +16,13 @@ function route() {
  const [sid,lid,anchor] = location.hash.slice(1).split('/');
  section=sections.find(s=>s.id===sid)||sections[0];
  const alias=section.aliases?.[lid];
+ const redirect=section.redirects?.[lid];
+ chapterRedirect=Boolean(redirect);
  resourceAlias=Boolean(alias);
  resourceRoute=section.type==='course'&&(Boolean(alias)||anchor==='resources');
- lesson=section.lessons.find(l=>l.id===(alias||lid))||section.lessons[0];
+ lesson=section.lessons.find(l=>l.id===(alias||redirect||lid))||section.lessons[0];
  render();
- if(resourceRoute)focusLesson();
+ if(resourceRoute||chapterRedirect)focusLesson();
 }
 function navigate(s,l) { const hash=`#${s.id}/${l.id}`; if(location.hash===hash) render(); else location.hash=hash; }
 function renderNav() {
@@ -36,8 +38,9 @@ function render() {
  document.title=`${lesson.title} · Android Interview`;
  $('main').innerHTML=`<div class="eyebrow">${isCourse?'COURSE':'PRIMER'} ${String(sections.indexOf(section)+1).padStart(2,'0')} <span> / </span> ANDROID INTERVIEW</div>
  <div class="section-heading"><h1>${escape(section.title)}</h1><p>${escape(section.subtitle)}</p></div>
- ${section.id==='kotlin'||isCourse?`<div class="study-resource">${section.id==='kotlin'?'<a class="button" href="#coroutines">Study Kotlin Coroutines</a>':''}<a class="button" href="docs/study-guides/kotlin-coroutines-study-guide.pdf" target="_blank" rel="noopener noreferrer">${isCourse?'Download source PDF':'Open coroutines study guide'}</a><span class="muted">42-page PDF · Opens in a new tab</span></div>`:''}
- <p class="study-note">${isCourse?'Web edition of the guide reviewed on 30 September 2026. Chapter resources appear in the footer. Source page numbers still refer to the original PDF, independently of the reading order below.':'Use the quizzes for recall. Before an interview, write the examples from scratch, explain tradeoffs, and complete the practice lessons.'}</p>
+ ${section.id==='kotlin'?`<div class="study-resource">${section.id==='kotlin'?'<a class="button" href="#coroutines">Study Kotlin Coroutines</a>':''}<a class="button" href="docs/study-guides/kotlin-coroutines-study-guide.pdf" target="_blank" rel="noopener noreferrer">Open coroutines study guide</a><span class="muted">42-page PDF · Opens in a new tab</span></div>`:''}
+ <p class="study-note">${isCourse?'Read by topic. Examples explain behavior and tradeoffs; each chapter links to relevant official documentation.':'Use the quizzes for recall. Before an interview, write the examples from scratch, explain tradeoffs, and complete the practice lessons.'}</p>
+ ${chapterRedirect?'<p class="study-note" id="course-redirect-note">This saved link opens the related reference topic. Your review history is unchanged.</p>':''}
  ${resourceAlias?'<p class="study-note" id="course-route-note">The former resources chapters now appear in the relevant chapter footer. This link opens a related chapter and its resources; existing review history is unchanged.</p>':''}
  <div class="section-meta"><span>${section.lessons.length} ${isCourse?'complete chapters':'bite-sized lessons'}</span><span>${done} / ${section.lessons.length} reviewed</span></div><div class="progress-track" role="progressbar" aria-label="${isCourse?'Chapters':'Lessons'} reviewed" aria-valuemin="0" aria-valuemax="${section.lessons.length}" aria-valuenow="${done}"><div style="width:${done/section.lessons.length*100}%"></div></div>
  ${isCourse?`<label class="chapter-picker">Jump to chapter <select id="chapter-picker">${section.groups.map(group=>`<optgroup label="${escape(group.label)}">${group.ids.map(id=>{const l=section.lessons.find(l=>l.id===id),i=section.lessons.indexOf(l);return `<option value="${l.id}" ${l===lesson?'selected':''}>${String(i+1).padStart(2,'0')} · ${escape(l.title)}</option>`;}).join('')}</optgroup>`).join('')}</select></label>`:''}
@@ -49,7 +52,7 @@ function render() {
  ${section.id==='algorithms'?visualizerMarkup():''}
  <section class="quiz-card" aria-label="Knowledge check"><div class="eyebrow">CHECK YOUR UNDERSTANDING</div><h3>${escape(lesson.quiz.question)}</h3><div class="quiz-options">${lesson.quiz.options.map((o,i)=>`<button class="quiz-option" data-answer="${i}"><span>${String.fromCharCode(65+i)}</span>${escape(o)}</button>`).join('')}</div><p class="quiz-feedback" id="quiz-feedback" aria-live="polite"></p></section>`}
  <div class="lesson-actions"><button class="mark-button ${isDone?'reviewed':''}" id="mark" aria-pressed="${isDone}">${isDone?'✓ Reviewed':'Mark as reviewed'}</button>${isCourse?`<button class="next-button" id="previous" ${index===0?'disabled':''}>← Previous chapter</button>`:''}<button class="next-button" id="next">${index===section.lessons.length-1?'Next section':isCourse?'Next chapter':'Next lesson'} <span aria-hidden="true">→</span></button></div></article></div>
- ${isCourse?window.CoroutineCourse.renderResources(section,lesson):`<div class="section-sources"><span>GO DEEPER</span>${(section.sources||[]).map(s=>`<a href="${escape(s.url)}" target="_blank" rel="noopener noreferrer">${escape(s.title)} ↗</a>`).join('')}<small>Reference links require internet. Examples are focused snippets; Android examples assume the relevant project setup and imports.</small></div>`}`;
+ ${isCourse?window.CoroutineCourse.renderResources(lesson):`<div class="section-sources"><span>GO DEEPER</span>${(section.sources||[]).map(s=>`<a href="${escape(s.url)}" target="_blank" rel="noopener noreferrer">${escape(s.title)} ↗</a>`).join('')}<small>Reference links require internet. Examples are focused snippets; Android examples assume the relevant project setup and imports.</small></div>`}`;
  $('main').querySelectorAll('[data-lesson]').forEach(b=>b.onclick=()=>navigate(section,section.lessons.find(l=>l.id===b.dataset.lesson)));
  const examples=isCourse?lesson.blocks.filter(b=>b.type==='code').map(b=>b.code):[lesson.code];
  $('main').querySelectorAll('[data-copy-code]').forEach(button=>button.onclick=async()=>{try {await navigator.clipboard.writeText(examples[Number(button.dataset.copyCode)]);notify('Kotlin example copied.');} catch {notify('Select the code and use your device’s Copy command.');}});

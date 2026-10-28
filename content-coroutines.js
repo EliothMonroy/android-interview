@@ -1,1406 +1,1859 @@
-/* Reorganized web edition. Stable IDs and sourcePage values retain PDF provenance. */
+/* Independent informational reference. The companion PDF is background reading. */
 window.PRIMERS.push({
   "id": "coroutines",
   "title": "Kotlin Coroutines",
-  "subtitle": "A practical guide to foundations, ownership, cancellation, streams, Android, and tests.",
+  "subtitle": "A practical reference for suspension, async/await, ownership, streams, and Android lifetimes.",
   "type": "course",
   "icon": "Co",
-  "sources": [
-    {
-      "title": "Kotlin coroutines guide",
-      "url": "https://kotlinlang.org/docs/coroutines-guide.html"
-    },
-    {
-      "title": "Android coroutine best practices",
-      "url": "https://developer.android.com/kotlin/coroutines/coroutines-best-practices"
-    }
-  ],
   "lessons": [
     {
       "id": "coroutines-01",
-      "title": "Kotlin coroutines",
-      "summary": "A complete study guide, from syntax to resilient Android code",
-      "stage": "START HERE",
-      "sourcePage": 1,
+      "title": "Kotlin coroutines: the essential model",
+      "summary": "Suspendable computations, explicit concurrency, and lifetimes that follow their owner.",
+      "stage": "FOUNDATIONS",
+      "group": "FOUNDATIONS",
       "blocks": [
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Build a precise mental model of suspension, task ownership, cancellation, and failure. Then apply it to streams, Android lifecycles, and deterministic tests."
+              "text": "A coroutine represents work that can pause and later continue. It is useful when an operation spends time waiting for a response, a timer, or another computation. Kotlin lets that work read like ordinary sequential code: a function call returns a value, a later statement uses it, and exceptions follow familiar control flow. The coroutine library adds tools for starting concurrent work and managing its lifetime."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "The important distinction is between the computation and the resource executing it. A coroutine is not a dedicated operating system thread. When a suspending operation releases a thread, another coroutine can use that thread. This does not make every function nonblocking: an ordinary blocking call inside a coroutine still occupies its executing thread."
             }
           ]
         },
         {
           "type": "heading",
-          "text": "Your anchor problem"
+          "text": "Five questions that describe an operation"
         },
         {
-          "type": "code",
-          "code": "suspend fun fetchProfile(): String {\n    delay(100)\n    return \"profile\"\n}\nsuspend fun fetchOrders(): String {\n    delay(50)\n    throw IllegalStateException(\"Wrong orders\")\n}"
+          "type": "table",
+          "headers": [
+            "Question",
+            "Relevant concept"
+          ],
+          "rows": [
+            [
+              "What value does it produce?",
+              "A suspending return value or Deferred<T>"
+            ],
+            [
+              "Who should stop it?",
+              "The owning scope and Job hierarchy"
+            ],
+            [
+              "Where does its active code execute?",
+              "Its dispatcher and coroutine context"
+            ],
+            [
+              "What happens when a dependency fails?",
+              "A failure policy and recovery boundary"
+            ],
+            [
+              "What if the result is no longer wanted?",
+              "Cooperative cancellation and cleanup"
+            ]
+          ]
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Why can orders cancel profile before orders.await() is reached? How can profile finish anyway? Every chapter adds a piece of the answer, then asks you to predict and test the behavior."
+              "text": "For example, a dashboard may need an account name and recent activity. If both are required for one valid result, their work can share a failure boundary. If either is independently useful, the result model can retain one success and one failure. These are product decisions expressed through coroutine structure; choosing async alone does not decide them."
             }
           ]
         },
         {
           "type": "note",
-          "title": "35 study sessions / 5 weeks",
+          "title": "Language and library",
           "runs": [
             {
-              "text": "Plan for 45-60 minutes per study day. Read, predict, run, change one variable, and explain the result. The schedule includes implementation days, review days, and a capstone."
+              "text": "The suspend modifier belongs to Kotlin. Builders, scopes, dispatchers, and Flow are primarily supplied by kotlinx.coroutines. A suspending function may be sequential and need not start another coroutine."
             }
           ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Prepared for the continuation of “Analyze Kotlin Syntax.” Examples and exercises use the original profile/orders scenario. Reviewed edition / 30 September 2026."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Code convention: JVM snippets use kotlinx.coroutines.*; Flow snippets also use kotlinx.coroutines.flow.*. Android and test listings identify their extra imports. Keep functions/types at file scope; put loose statements inside main or a test. Page 35 explains placement and test setup."
-            }
-          ]
-        },
-        {
-          "type": "timeline"
         }
       ],
-      "group": "START HERE",
-      "referenceNumbers": [
-        1,
-        4
+      "sources": [
+        {
+          "title": "Coroutines overview",
+          "url": "https://kotlinlang.org/docs/coroutines-overview.html",
+          "description": "The language and library concepts behind coroutine-based concurrency."
+        }
       ]
     },
     {
       "id": "coroutines-02",
-      "title": "How to use this guide",
-      "summary": "Learn the rules, then prove them with small experiments",
-      "stage": "START HERE",
-      "sourcePage": 2,
+      "title": "Reading coroutine behavior",
+      "summary": "Separate ordinary control flow, scheduling, ownership, and result observation.",
+      "stage": "FOUNDATIONS",
+      "group": "FOUNDATIONS",
       "blocks": [
         {
-          "type": "table",
-          "headers": [
-            "Read",
-            "Topics",
-            "Pages"
-          ],
-          "rows": [
-            [
-              "Foundations",
-              "Setup, Kotlin syntax, threads, suspension",
-              "3-7"
-            ],
-            [
-              "Task ownership",
-              "Builders, original program, Job tree, scopes",
-              "8-11"
-            ],
-            [
-              "Failure and cancellation",
-              "Cancellation, cleanup, exceptions, supervision",
-              "12-16"
-            ],
-            [
-              "Choosing the tool",
-              "Dispatchers, async vs withContext, error models",
-              "17-20"
-            ],
-            [
-              "Streams",
-              "Flow operators, StateFlow, SharedFlow",
-              "21-24"
-            ],
-            [
-              "Android and tests",
-              "ViewModel, lifecycle collection, virtual time",
-              "25-28"
-            ],
-            [
-              "Practice",
-              "5-week schedule, labs, answers, quick reference",
-              "29-34"
-            ],
-            [
-              "Worked practice",
-              "Test setup, solutions, races, Android tests",
-              "35-40"
-            ],
-            [
-              "Official resources",
-              "Annotated, clickable reading list",
-              "41-42"
-            ]
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Coroutine code becomes easier to reason about when four different relationships are kept separate. Ordinary control flow determines which statements one coroutine reaches. Scheduling determines when its runnable code receives an execution resource. Ownership determines which operations must finish together and how cancellation travels. Observation determines where a value or exception becomes visible to a caller."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "A launch call introduces a new coroutine and returns a Job. The next statement in the caller can proceed without waiting for that child to finish. A direct suspending call works differently: its caller continues after the function returns, although the thread may be free for other work while the caller is suspended. An async call adds a result-bearing child; await observes its eventual outcome."
+            }
           ]
         },
         {
           "type": "heading",
-          "text": "A session that builds understanding"
+          "text": "A compact reading map"
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Visible expression",
+            "Question it answers"
+          ],
+          "rows": [
+            [
+              "suspend fun calculate(): Int",
+              "What result does this operation return?"
+            ],
+            [
+              "scope.launch { ... }",
+              "Which scope receives a child operation?"
+            ],
+            [
+              "async { ... }.await()",
+              "Where is a concurrent result observed?"
+            ],
+            [
+              "withContext(dispatcher) { ... }",
+              "Which context executes this bounded operation?"
+            ],
+            [
+              "try { coroutineScope { ... } }",
+              "Where can the caller recover from group failure?"
+            ]
+          ]
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Spend 10 minutes reading, 10 minutes predicting the next output and drawing the Job tree, 20-30 minutes running and modifying the example, and 5-10 minutes writing a short explanation from memory. Record expected output before pressing Run."
+              "text": "Timing diagrams describe possible overlap, not universal output order. A delay duration is a minimum waiting interval under normal completion, and dispatching adds scheduling effects. A textual order between independent children is rarely a contract. The reliable relationships are dependencies: a value must exist before code uses it, and a structured owner waits for its children before completing."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Use approximate timelines only for reasoning. The 50 ms and 100 ms delays are teaching fixtures, not promises about wall-clock scheduling. Tests later replace those delays with virtual time."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Definition of progress",
-          "runs": [
-            {
-              "text": "You can name the owner of each coroutine, explain how cancellation travels, distinguish failure from cancellation, and choose a scope based on the desired product behavior."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "If a checkpoint fails, repeat the related experiment with fewer moving parts. You can accelerate the syntax chapters if they are familiar, but keep the exception and supervision exercises."
+              "text": "This reference groups the concepts by purpose. Syntax explains the expressions; ownership explains lifetime; failure and cancellation explain stopping; dispatchers explain execution placement. Those perspectives apply together to the same function rather than defining separate programming styles."
             }
           ]
         }
       ],
-      "group": "START HERE",
-      "referenceNumbers": [
-        1,
-        22
-      ]
-    },
-    {
-      "id": "coroutines-03",
-      "title": "Set up a small Kotlin lab",
-      "summary": "A runnable JVM starting point before Android integration",
-      "stage": "WEEK 1",
-      "sourcePage": 3,
-      "blocks": [
+      "sources": [
         {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Create a Kotlin/JVM Gradle project in IntelliJ IDEA. Keep its generated Kotlin plugin and JDK configuration. Add the following repositories and dependencies to build.gradle.kts, then sync Gradle. The official coroutine documentation currently shows 1.11.0; keep core and test on the same version. [1, 22]"
-            }
-          ]
+          "title": "Coroutines basics",
+          "url": "https://kotlinlang.org/docs/coroutines-basics.html",
+          "description": "Suspension, coroutine builders, and structured parent-child relationships."
         },
         {
-          "type": "code",
-          "code": "repositories { mavenCentral() }\ndependencies {\n    implementation(\n        \"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0\"\n    )\n    testImplementation(kotlin(\"test-junit5\"))\n    testImplementation(\n        \"org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0\"\n    )\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Put this in src/main/kotlin/Main.kt. It is a complete, successful first run. Keep fetchOrders failing; create a separate successful fixture when an exercise asks for one."
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "import kotlinx.coroutines.*\n\nsuspend fun fetchProfile(): String {\n    delay(100)\n    return \"profile\"\n}\nsuspend fun fetchOrders(): String {\n    delay(50)\n    throw IllegalStateException(\"Wrong orders\")\n}\nfun main() = runBlocking {\n    println(fetchProfile())\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Expected output: profile. If delay is unresolved, first check the coroutine dependency, Gradle sync, and the import. A Kotlin file alone does not supply kotlinx.coroutines. If the chosen coroutine version requires a newer Kotlin compiler, update the project using the official compatibility information rather than mixing arbitrary versions."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Keep examples separate",
-          "runs": [
-            {
-              "text": "Replace main for each experiment. Do not paste several main functions with identical signatures into one source set. Android dependencies appear in its chapters. Before running tests, add the test engine configuration on page 35."
-            }
-          ]
+          "title": "Deferred.await",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/await.html",
+          "description": "The result-observation and cancellation contract of await."
         }
-      ],
-      "group": "FOUNDATIONS AND LAB SETUP",
-      "referenceNumbers": [
-        1,
-        22,
-        31
-      ]
-    },
-    {
-      "id": "coroutines-35",
-      "title": "Run snippets and discover tests",
-      "summary": "Remove setup friction before studying behavior",
-      "stage": "WORKED PRACTICE",
-      "sourcePage": 35,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "A .kt file accepts declarations such as functions and classes at file scope, but not loose statements such as println or attempts += 1. Place those inside a function. The syntax listings on pages 4-5 mix declarations and usage to explain them; this is how to run that usage:"
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "fun label(id: Int): String = \"user-$id\"\nfun main() {\n    val profile = label(7)\n    var attempts = 0\n    attempts += 1\n    println(\"profile: $profile, attempts: $attempts\")\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Use src/main/kotlin/Main.kt for the demo, and src/test/kotlin/ProfileTest.kt for the class on page 27. Keep your generated Kotlin/JVM plugin and compatible JDK configuration. The setup below uses Jupiter via the Kotlin JUnit integration; JUnit 6 requires Java 17 or later. [31]"
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "// Add to build.gradle.kts alongside the core/test dependencies.\ndependencies {\n    testImplementation(kotlin(\"test-junit5\"))\n    testImplementation(platform(\"org.junit:junit-bom:6.0.3\"))\n    testRuntimeOnly(\"org.junit.jupiter:junit-jupiter-engine\")\n    testRuntimeOnly(\"org.junit.platform:junit-platform-launcher\")\n}\ntasks.test { useJUnitPlatform() }"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Sync Gradle, then run the test using its IDE gutter icon or ./gradlew test from the project folder. A passing test run must report tests executed, not “no tests found.” Temporarily change the expected profile value and verify a failure; restore the correct assertion afterward."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Keep the configurations distinct",
-          "runs": [
-            {
-              "text": "The Android host project can use its existing JUnit configuration. Do not copy this standalone JVM setup into an Android module without adapting it. kotlin.test assertions work with the selected Kotlin/JUnit integration."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Use one main per experiment. Keep fixtures and reusable helpers in the same package as tests, or import them. The two-argument loader on page 36 is an overload of the zero-argument loader on page 20, so both can coexist."
-            }
-          ]
-        }
-      ],
-      "group": "FOUNDATIONS AND LAB SETUP",
-      "referenceNumbers": [
-        22,
-        31
       ]
     },
     {
       "id": "coroutines-04",
-      "title": "Read Kotlin syntax confidently",
-      "summary": "Functions, values, types, nullability, and exceptions",
-      "stage": "WEEK 1",
-      "sourcePage": 4,
+      "title": "Kotlin syntax for suspending APIs",
+      "summary": "Return types, nullability, and exception expressions describe the result contract.",
+      "stage": "FOUNDATIONS",
+      "group": "FOUNDATIONS",
       "blocks": [
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "A function declares a name, inputs, and an output type. A block body uses return to produce its result; an expression body uses the expression after =. val prevents reassignment of the reference, while var allows it. Neither makes a referenced mutable object thread-safe."
+              "text": "A Kotlin function declares named parameters and may declare a return type after a colon. A block body uses return to provide a value; an expression body uses an equals sign and can infer its type. suspend changes where the function can be called and which suspending operations it can invoke. It does not replace the ordinary return type with a future or promise."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "A val binding cannot be reassigned. That does not make the referenced object immutable: a val holding a mutable list can still refer to a list whose contents change. This matters when concurrent coroutines share objects. A local name is not a synchronization mechanism, and using suspend does not protect shared mutable state."
             }
           ]
         },
         {
           "type": "code",
-          "code": "fun label(id: Int): String { return \"user-$id\" }\nfun labelShort(id: Int): String = \"user-$id\"\nval profile: String = label(7)\nvar attempts = 0\nattempts += 1\nprintln(\"profile: $profile, attempts: $attempts\")"
+          "code": "import kotlinx.coroutines.delay\nimport kotlinx.coroutines.runBlocking\n\ndata class Account(val displayName: String?)\n\nsuspend fun accountLabel(account: Account): String {\n    delay(10)\n    return account.displayName?.trim()?.takeIf { it.isNotEmpty() }\n        ?: \"Guest\"\n}\n\nfun main() = runBlocking {\n    val account = Account(displayName = null)\n    val label: String = accountLabel(account)\n    println(label)\n}"
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "String interpolation evaluates $name or the expression inside ${...}. In your original println, the profile await expression is evaluated before the orders await expression. That expression order does not control when the two async computations start or fail."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "Failure as control flow"
-        },
-        {
-          "type": "code",
-          "code": "fun ordersLabel(ok: Boolean): String {\n    if (!ok) throw IllegalStateException(\"Wrong orders\")\n    return \"orders\"\n}\nval message = try {\n    ordersLabel(false)\n} catch (e: IllegalStateException) {\n    \"unavailable: ${e.message}\"\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "try can be an expression. A catch handles a matching exception thrown while that call stack executes. A finally block runs when leaving the try, including during exception propagation. Throwing interrupts the current path; code after the throw is unreachable. [3]"
+              "text": "Here Account has a nullable property, but accountLabel returns a non-null String. The safe-call operator skips member access when its receiver is null. The Elvis operator supplies the fallback. Neither operator catches exceptions. A thrown exception means the function did not return an ordinary value; callers choose whether to recover from it."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "String? allows null; String does not. A nullable result can mean “absent,” but cannot by itself distinguish missing data from a network failure. Result<String> later represents success or failure explicitly. Generic types such as List<String> and Deferred<String> say what kind of value a container holds."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 1",
-          "runs": [
-            {
-              "text": "Write a function that returns a label, then one that throws. Predict which lines execute inside try/catch/finally. Explain why catch does not undo work already completed."
+              "text": "Unit represents a function without a meaningful result value. Nothing describes an expression that cannot complete normally, such as throw or error. These types explain why a conditional branch can throw while the other branch returns a String. Nullable results and failed operations communicate different facts and should be chosen deliberately."
             }
           ]
         }
       ],
-      "group": "FOUNDATIONS AND LAB SETUP",
-      "referenceNumbers": [
-        3
+      "sources": [
+        {
+          "title": "Functions",
+          "url": "https://kotlinlang.org/docs/functions.html",
+          "description": "Parameters, return types, expression bodies, and default arguments."
+        },
+        {
+          "title": "Null safety",
+          "url": "https://kotlinlang.org/docs/null-safety.html",
+          "description": "Nullable types, safe calls, and the Elvis operator."
+        }
       ]
     },
     {
       "id": "coroutines-05",
-      "title": "Lambdas, receivers, and generics",
-      "summary": "Why launch { ... } is valid Kotlin syntax",
-      "stage": "WEEK 1",
-      "sourcePage": 5,
+      "title": "Lambdas, receivers, and generic results",
+      "summary": "Coroutine builders use ordinary Kotlin function types with a suspending receiver.",
+      "stage": "FOUNDATIONS",
+      "group": "FOUNDATIONS",
       "blocks": [
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "A lambda is a function value. () -> String describes a function taking no arguments and returning String. A function accepting another function is a higher-order function. Kotlin allows a final lambda argument to appear outside parentheses. [2]"
+              "text": "The braces after launch or async are a lambda argument. Kotlin permits the final function argument to appear outside parentheses, which explains the familiar launch { ... } form. The builder is still a function call. Its lambda is the work to execute, and optional named arguments such as context or start remain inside parentheses."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Function types describe executable values. A type such as (Int) -> String takes an Int and produces a String. A suspend () -> String can invoke suspending operations and produce a String. A receiver type adds an implicit this: suspend CoroutineScope.() -> T describes a suspending lambda in which CoroutineScope members and extensions are available without repeating the receiver."
             }
           ]
         },
         {
           "type": "code",
-          "code": "fun describe(load: () -> String): String = load()\nval answer = describe { \"profile\" }\n\nclass Notebook { fun line(s: String) = println(s) }\nfun write(block: Notebook.() -> Unit) {\n    Notebook().block()\n}\nwrite {\n    line(\"Implicit receiver\")\n    this.line(\"Explicit receiver\")\n}"
+          "code": "import kotlinx.coroutines.async\nimport kotlinx.coroutines.coroutineScope\nimport kotlinx.coroutines.delay\nimport kotlinx.coroutines.runBlocking\n\nsuspend fun <T> paired(operation: suspend (Int) -> T): Pair<T, T> =\n    coroutineScope {\n        val first = async { operation(1) }\n        val second = async { operation(2) }\n        first.await() to second.await()\n    }\n\nfun main() = runBlocking {\n    val names: Pair<String, String> = paired { number ->\n        delay(10)\n        \"item-$number\"\n    }\n    println(names)\n}"
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Notebook.() -> Unit is a lambda with a receiver. Inside it, this is a Notebook, so line resolves without an explicit object. Coroutine builders similarly provide a CoroutineScope receiver. launch and async are extension functions on that receiver."
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "fun CoroutineScope.startProfile(): Job = launch {\n    println(fetchProfile())\n}\n// Approximate block type accepted by async:\n// suspend CoroutineScope.() -> T\n// async { fetchProfile() } produces Deferred<String>."
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "The extension receiver gives a function access to a scope; it does not inherit from that class or create a new scope. suspend in a lambda type permits suspension inside the lambda. T is a generic type parameter, and the compiler infers String from fetchProfile. Deferred<T> combines a lifecycle handle with a future result."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 2",
-          "runs": [
-            {
-              "text": "Rewrite launch as this.launch inside runBlocking. Then move launch into an ordinary function with no scope receiver: observe the unresolved reference. Fix it by accepting a CoroutineScope or declaring an extension receiver. Decide who owns the passed scope."
+              "text": "The generic T preserves the relationship between the operation result and both Pair elements. In this call, Kotlin infers String from the lambda’s final expression. Similarly, async infers Deferred<String> when its block returns a String. The lambda’s last expression supplies its value; println as the last expression instead yields Unit."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": true,
           "runs": [
             {
-              "text": "Official reading: [2] Lambdas; [1] Coroutines basics. Sources are linked on pages 41-42."
+              "text": "The receiver explains why async is available inside coroutineScope. It does not make every nested lambda a new coroutine. map, let, and other ordinary higher-order functions remain ordinary control-flow constructs unless their implementation explicitly starts work. The builder and the selected scope establish the concurrent child."
             }
           ]
         }
       ],
-      "group": "FOUNDATIONS AND LAB SETUP",
-      "referenceNumbers": [
-        1,
-        2
+      "sources": [
+        {
+          "title": "Higher-order functions and lambdas",
+          "url": "https://kotlinlang.org/docs/lambdas.html",
+          "description": "Function types, trailing lambdas, receiver function types, and inferred results."
+        }
       ]
     },
     {
       "id": "coroutines-06",
-      "title": "Threads, blocking, and concurrency",
-      "summary": "Separate execution resources from the work scheduled on them",
-      "stage": "WEEK 1",
-      "sourcePage": 6,
+      "title": "Concurrency, parallelism, and blocking",
+      "summary": "Overlapping lifetimes do not imply simultaneous execution or nonblocking code.",
+      "stage": "FOUNDATIONS",
+      "group": "FOUNDATIONS",
       "blocks": [
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "A JVM thread executes instructions. Blocking occupies that thread while waiting: Thread.sleep and a synchronous file read are examples. A coroutine can suspend its work so the thread runs other work, provided the operation actually supports suspension. A coroutine still needs a thread when executing code."
+              "text": "Concurrency means that multiple operations can be in progress during overlapping periods. Parallelism means that active instructions execute simultaneously on different execution resources. Two coroutines can be concurrent on one thread when one suspends and the other runs. Conversely, two CPU-heavy coroutines cannot execute in parallel on a dispatcher confined to a single thread."
             }
           ]
         },
         {
-          "type": "table",
-          "headers": [
-            "Idea",
-            "Meaning in the profile/orders lab"
-          ],
-          "rows": [
-            [
-              "Sequential",
-              "Start and finish profile, then start orders."
-            ],
-            [
-              "Concurrent",
-              "Both tasks are in progress over overlapping intervals."
-            ],
-            [
-              "Parallel",
-              "Instructions execute simultaneously on different CPU cores."
-            ],
-            [
-              "Blocking",
-              "A waiting operation holds a thread."
-            ],
-            [
-              "Suspending",
-              "A waiting coroutine yields its thread for other work."
-            ]
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Blocking occupies the current thread until an operation returns. Thread.sleep is a JVM example: its caller cannot use that thread for other coroutine work during the sleep. delay suspends its coroutine instead, leaving the thread available. A coroutine containing Thread.sleep is still a coroutine, but its sleep remains blocking."
+            }
           ]
         },
         {
           "type": "code",
-          "code": "fun main() = runBlocking {\n    launch { delay(100); println(\"A\") }\n    launch { delay(50); println(\"B\") }\n    println(\"started\")\n}"
+          "code": "import kotlinx.coroutines.coroutineScope\nimport kotlinx.coroutines.delay\nimport kotlinx.coroutines.launch\nimport kotlinx.coroutines.runBlocking\n\nfun main() = runBlocking<Unit> {\n    coroutineScope {\n        launch {\n            delay(20)\n            println(\"first timer completed\")\n        }\n        launch {\n            delay(10)\n            println(\"second timer completed\")\n        }\n    }\n}"
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "With this inherited runBlocking event loop, the delayed work overlaps on one thread: started, B, A. Parallel CPU execution is unnecessary. Change the first delay to Thread.sleep(100): once that child runs, it prevents the same thread from running the second child until sleep returns. This alters responsiveness and timing, not just spelling."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "Concurrency introduces shared-state problems"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Two coroutines on a multithreaded dispatcher can race on counter++. Suspension can also interleave read-then-write logic on a single thread. Prefer immutable results, confined ownership, atomic operations, or Mutex for coordinated mutation. Keeping a variable as val does not protect the contents of a mutable list."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 3",
-          "runs": [
-            {
-              "text": "Draw one thread as a lane and mark when each coroutine runs or waits. Explain why two delay calls can overlap, while a single thread cannot execute two CPU instructions at the same instant."
+              "text": "The timers can overlap even though the default runBlocking event loop uses its calling thread. The durations illustrate suspension, not a performance guarantee or a universal ordering rule. The enclosing scope waits for both children. No extra dispatcher is needed merely to make these delays concurrent."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": true,
           "runs": [
             {
-              "text": "Official reading: [1] Basics; [16] Context and dispatchers. Sources are linked on pages 41-42."
+              "text": "Moving a blocking operation to an I/O dispatcher protects the calling thread, but still consumes a worker thread while blocked. Moving CPU work to a computation dispatcher enables suitable scheduling; it does not automatically divide one algorithm into parallel pieces. Parallel decomposition requires independent work, enough resources, and a safe way to combine results. Greater concurrency can also increase memory, connection use, and contention, so starting more coroutines is not by itself an optimization."
             }
           ]
         }
       ],
-      "group": "FOUNDATIONS AND LAB SETUP",
-      "referenceNumbers": [
-        1,
-        16,
-        30,
-        32
+      "sources": [
+        {
+          "title": "Coroutines basics",
+          "url": "https://kotlinlang.org/docs/coroutines-basics.html",
+          "description": "Concurrency and suspension on operating system threads."
+        },
+        {
+          "title": "delay",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/delay.html",
+          "description": "A cancellable delay that does not block its executing thread."
+        },
+        {
+          "title": "Coroutine context and dispatchers",
+          "url": "https://kotlinlang.org/docs/coroutine-context-and-dispatchers.html",
+          "description": "Dispatcher choices and their relationship to execution threads."
+        }
       ]
     },
     {
       "id": "coroutines-07",
-      "title": "What suspend does",
-      "summary": "A function may pause; it does not automatically run elsewhere",
-      "stage": "WEEK 1",
-      "sourcePage": 7,
+      "title": "What suspend guarantees",
+      "summary": "A suspending signature permits suspension; its implementation determines blocking and context.",
+      "stage": "FOUNDATIONS",
+      "group": "FOUNDATIONS",
       "blocks": [
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "suspend changes where a function can be called and permits suspension. It does not start a coroutine, pick a dispatcher, make the body concurrent, or convert blocking calls to nonblocking calls. A suspend function can finish without ever suspending."
+              "text": "The suspend modifier makes a function callable from suspending code and allows it to call other suspending functions. A call still has an ordinary return type. If the function suspends, the caller pauses at that point and resumes when the operation can continue. If the implementation has no reason to suspend, it may return immediately."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "A suspending signature does not imply background execution. It also does not imply a new coroutine, concurrent work, a dispatcher switch, or cancellation checks at every statement. The implementation and called APIs determine those behaviors. A long loop in a suspending function can occupy the main thread just like a long loop in an ordinary function."
             }
           ]
         },
         {
           "type": "code",
-          "code": "suspend fun fetchBothSequential(): Pair<String, String> {\n    val profile = fetchProfile()\n    val orders = fetchOrders()\n    return profile to orders\n}"
+          "code": "import kotlinx.coroutines.delay\nimport kotlinx.coroutines.runBlocking\n\nsuspend fun greeting(name: String): String {\n    delay(10)\n    return \"Hello, $name\"\n}\n\nfun main() = runBlocking {\n    val first = greeting(\"Ada\")\n    val second = greeting(\"Lin\")\n    println(\"$first; $second\")\n}"
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "This calls profile first. About 100 ms later it starts orders, which fails after another 50 ms. No independent task was started. Sequential syntax remains sequential until a builder explicitly introduces concurrent work. [17]"
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "A useful implementation model"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "The compiler transforms suspension into resumable state: local values and the next execution position can be retained across pauses. A continuation represents what happens next. You do not need to implement this machinery to use it, but it explains why a function can resume without keeping a thread blocked throughout its delay."
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "suspend fun misleading() {\n    Thread.sleep(100)  // Still blocks the executing thread.\n}\nsuspend fun cooperative() {\n    delay(100)         // Cancellable suspending wait.\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Call suspend functions from a suspend function or a coroutine builder body. In console exercises, runBlocking bridges main to suspend code. In Android, start work in a lifecycle-owned scope. Later, withContext moves blocking work to an appropriate dispatcher."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Checkpoint A",
-          "runs": [
-            {
-              "text": "Can you explain why fetchProfile() is sequential when called directly, why delay is a library function, and why suspend alone does not mean “background thread”? If not, repeat pages 3-7 before adding failure policies."
+              "text": "The two greeting calls are sequential: the second begins after the first returns. delay allows the coroutine to wait without occupying the thread. It does not transform the following greeting into a concurrent invocation. async or launch would introduce separate coroutine lifetimes where overlap is useful."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": true,
           "runs": [
             {
-              "text": "Official reading: [1] Basics; [17] Composing suspending functions. Sources are linked on pages 41-42."
+              "text": "A suspending function can also be cancelled by its owner while waiting at a cancellable operation. Most standard coroutine suspension primitives cooperate with cancellation, but an arbitrary third-party suspending function needs its own documented contract. Designing a useful suspending API therefore includes its result, execution safety, ownership, and stopping behavior. The keyword communicates permission to suspend, while those broader guarantees belong to the API."
             }
           ]
         }
       ],
-      "group": "FOUNDATIONS AND LAB SETUP",
-      "referenceNumbers": [
-        1,
-        17
+      "sources": [
+        {
+          "title": "Coroutines basics",
+          "url": "https://kotlinlang.org/docs/coroutines-basics.html",
+          "description": "Suspending functions and sequential invocation."
+        },
+        {
+          "title": "delay",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/delay.html",
+          "description": "The suspension and cancellation behavior used in the example."
+        }
       ]
     },
     {
       "id": "coroutines-08",
-      "title": "Four essential entry points",
-      "summary": "Understand the result, waiting behavior, and intended use",
-      "stage": "WEEK 2",
-      "sourcePage": 8,
+      "title": "Choosing a coroutine entry point",
+      "summary": "launch starts an action, async starts a value, and scoped calls return bounded work.",
+      "stage": "OWNERSHIP AND BUILDERS",
+      "group": "OWNERSHIP AND BUILDERS",
       "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Coroutine APIs differ in what they return and whether the caller waits. launch returns a Job representing a child action. async returns Deferred<T>, which is a Job with an eventual value. Neither call joins the child. A dispatcher may begin execution inline or schedule it for later; the builder is not a completion barrier."
+            }
+          ]
+        },
         {
           "type": "table",
           "headers": [
             "API",
-            "Returns",
-            "How the caller continues"
+            "Immediate result",
+            "Typical purpose"
           ],
           "rows": [
             [
               "launch",
               "Job",
-              "Starts a task; caller can continue. join waits."
+              "Start a child action owned by a scope"
             ],
             [
               "async",
               "Deferred<T>",
-              "Starts a computation; await waits for its value."
+              "Start a child whose value will be needed"
             ],
             [
-              "runBlocking",
-              "T",
-              "Blocks its calling thread until its block and children finish."
+              "coroutineScope",
+              "The block result",
+              "Own a group of related child operations"
             ],
             [
               "withContext",
-              "T",
-              "Suspends until its block and children finish; uses the supplied context."
+              "The block result",
+              "Execute bounded work with an updated context"
+            ],
+            [
+              "runBlocking",
+              "The block result",
+              "Bridge a blocking entry point to suspending code"
             ]
           ]
         },
         {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "join suspends until a Job finishes and does not retrieve its exception as a result. await retrieves a Deferred value or throws its failure; it is also cancellable. A child failure may already have affected an ordinary parent before either join or await is reached. Waiting and failure ownership are separate contracts."
+            }
+          ]
+        },
+        {
           "type": "code",
-          "code": "fun main() = runBlocking {\n    val job: Job = launch { println(fetchProfile()) }\n    val deferred: Deferred<String> = async { fetchProfile() }\n    println(\"children started\")\n    job.join()\n    println(deferred.await())\n    val value = withContext(Dispatchers.Default) { 2 + 3 }\n    println(value)\n}"
+          "code": "import kotlinx.coroutines.async\nimport kotlinx.coroutines.delay\nimport kotlinx.coroutines.launch\nimport kotlinx.coroutines.runBlocking\n\nfun main() = runBlocking {\n    val announcement = launch { println(\"Loading\") }\n    val value = async {\n        delay(10)\n        42\n    }\n    announcement.join()\n    println(value.await())\n}"
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "join observes completion without retrieving a result or rethrowing that Job’s failure. It can still throw cancellation if the waiting coroutine is cancelled. await retrieves the result or throws; it also respects cancellation of the waiting coroutine. A normal child failure may already cancel the waiter’s parent before either operation."
+              "text": "runBlocking holds the calling thread until its structured work completes. It is useful at a console boundary, but a UI event handler or an already suspending function generally needs a nonblocking scoped API instead. withContext is appropriate for one result in a different dispatcher. async is appropriate when an independently started result can overlap useful work; immediately awaiting a single async often adds unnecessary structure."
             }
           ]
         },
         {
-          "type": "paragraph",
-          "small": false,
+          "type": "checkpoint",
+          "prompt": "How do async and await differ from launch and join?",
           "runs": [
             {
-              "text": "launch is useful for UI-triggered operations when the value is delivered through state. async is useful when several concurrent values must be combined. withContext is useful for a single result computed in a different context. Use runBlocking at a blocking boundary such as these console demos; never to make Android UI code wait for a request."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Start behavior",
-          "runs": [
-            {
-              "text": "The default start schedules the coroutine according to its dispatcher; it does not guarantee its first line runs before the builder returns. LAZY defers starting until start, await, or join. UNDISPATCHED and other modes are advanced tools, not fixes for exception handling."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": true,
-          "runs": [
-            {
-              "text": "Official reading: [1] Basics; [11] async; [12] withContext; [10] Job. Sources are linked on pages 41-42."
+              "text": "async returns Deferred<T>, which represents a result. await suspends the caller until that result is available, or throws on failure or cancellation. launch returns Job; join waits for completion without retrieving a value or rethrowing that job’s failure. An ordinary child failure can still cancel the parent before either waiting operation."
             }
           ]
         }
       ],
-      "group": "OWNERSHIP AND STRUCTURED CONCURRENCY",
-      "referenceNumbers": [
-        1,
-        10,
-        11,
-        12,
-        29
+      "sources": [
+        {
+          "title": "launch",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html",
+          "description": "A scope-owned child action with a Job handle."
+        },
+        {
+          "title": "async",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html",
+          "description": "A scope-owned result-bearing child."
+        },
+        {
+          "title": "runBlocking",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html",
+          "description": "The blocking bridge and its completion contract."
+        },
+        {
+          "title": "Job.join",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/join.html",
+          "description": "Waiting for completion without retrieving a child result."
+        }
       ]
     },
     {
       "id": "coroutines-09",
-      "title": "Decode your original program",
-      "summary": "The catch surrounds starting a task, not its later execution",
-      "stage": "WEEK 2",
-      "sourcePage": 9,
+      "title": "Why a catch around launch misses child failure",
+      "summary": "Starting work and executing that work occur across different control-flow boundaries.",
+      "stage": "OWNERSHIP AND BUILDERS",
+      "group": "OWNERSHIP AND BUILDERS",
       "blocks": [
         {
-          "type": "code",
-          "code": "fun main() = runBlocking {\n    try {\n        launch {\n            val profile = async { fetchProfile() }\n            val orders = async { fetchOrders() }\n            println(\"profile: ${profile.await()} \" +\n                    \"orders: ${orders.await()}\")\n        }\n    } catch (e: Exception) {\n        println(e)\n    }\n    println(\"done\")\n}"
-        },
-        {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "On the default runBlocking event loop, launch schedules its child and returns a Job. The surrounding try finishes, then done prints. The runBlocking body reaches its end, but runBlocking itself cannot return while its child is still running."
+              "text": "A try block catches an exception thrown while its own statements execute. Calling launch usually schedules work and returns a Job, so a surrounding catch does not enclose the later execution of the child body. The ownership relationship still exists: under an ordinary parent, an unhandled child failure can cancel the parent even though the original try block has already ended."
             }
           ]
         },
         {
           "type": "code",
-          "code": "runBlocking\n  +-- launch\n        +-- async profile: waiting for 100 ms\n        +-- async orders: throws after 50 ms\n\norders failure -> launch fails -> profile cancelled\n               -> runBlocking fails -> main throws"
+          "code": "import kotlinx.coroutines.async\nimport kotlinx.coroutines.coroutineScope\nimport kotlinx.coroutines.delay\nimport kotlinx.coroutines.runBlocking\n\nsuspend fun accountName(): String {\n    delay(100)\n    return \"Ada\"\n}\n\nsuspend fun activityCount(): Int {\n    delay(10)\n    throw IllegalStateException(\"Activity unavailable\")\n}\n\nsuspend fun requiredSummary(): String = coroutineScope {\n    val name = async { accountName() }\n    val count = async { activityCount() }\n    \"${name.await()}: ${count.await()}\"\n}\n\nfun main() = runBlocking {\n    try {\n        println(requiredSummary())\n    } catch (failure: IllegalStateException) {\n        println(\"Summary unavailable: ${failure.message}\")\n    }\n}"
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Both async calls create children of launch. Orders fails with IllegalStateException, so the ordinary parent is cancelled and cancels profile. The failure propagates even though orders.await() has not run. profile.await() is interrupted by cancellation; the combined println never completes. The original cause eventually escapes runBlocking. [4, 11]"
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "What “done” actually means here",
-          "runs": [
-            {
-              "text": "It marks the end of the runBlocking block’s immediate statements, not successful completion of the whole coroutine tree. Move a final message after runBlocking only if you want it to indicate successful completion of that call."
+              "text": "The async children here belong to coroutineScope. If activityCount fails, its sibling is cancelled and the scoped call throws to its caller after the group has completed its termination. This can happen before count.await is reached. The catch surrounds the complete operation, giving the caller a recovery boundary without leaving its own Job cancelled by that group failure."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "A catch inside launch around await alone is also not a reliable recovery boundary for normal async child failure: the parent Job may already be cancelled. Use a scoped function boundary for a failing group, or supervision plus explicit error handling for independent results."
+              "text": "Catching only a failing await inside an ordinary parent is different. The failed child may already have cancelled that parent and its siblings. Catching the observed exception does not restore a cancelled Job. Recovery requires a suitable scoped boundary or an independent-result policy that handles expected failures before they fail child Jobs."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "A final log statement inside a launch-owning block proves only that execution reached that statement. Successful return from the complete structured operation is the meaningful completion boundary. The delays in this example describe competing work; exact wall-clock timing is not part of its API contract."
             }
           ]
         }
       ],
-      "group": "OWNERSHIP AND STRUCTURED CONCURRENCY",
-      "referenceNumbers": [
-        4,
-        11,
-        29
+      "sources": [
+        {
+          "title": "launch",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html",
+          "description": "Launching returns a handle while child failure follows its ownership relationship."
+        },
+        {
+          "title": "async",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html",
+          "description": "Ordinary async child failure affects its parent independently of await."
+        },
+        {
+          "title": "coroutineScope",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html",
+          "description": "A group boundary that completes its children and rethrows group failure to its caller."
+        }
       ]
     },
     {
       "id": "coroutines-10",
       "title": "Scope, context, and the Job tree",
-      "summary": "Three concepts that answer different questions",
-      "stage": "WEEK 2",
-      "sourcePage": 10,
+      "summary": "The scope starts work, the context configures it, and the Job tracks lifetime.",
+      "stage": "OWNERSHIP AND BUILDERS",
+      "group": "OWNERSHIP AND BUILDERS",
       "blocks": [
         {
-          "type": "table",
-          "headers": [
-            "Concept",
-            "Question it answers"
-          ],
-          "rows": [
-            [
-              "CoroutineScope",
-              "Where are new tasks launched, and who owns them?"
-            ],
-            [
-              "CoroutineContext",
-              "Which keyed elements govern execution?"
-            ],
-            [
-              "Job",
-              "What is this task’s lifecycle and parent relationship?"
-            ],
-            [
-              "Dispatcher",
-              "On which execution resource is work scheduled?"
-            ],
-            [
-              "CoroutineName",
-              "How can this coroutine be identified in diagnostics?"
-            ]
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "CoroutineScope is the receiver used to start children with builders such as launch and async. Its coroutineContext supplies execution elements. Those elements include a Job for lifecycle, a dispatcher for execution placement, and optional values such as a coroutine name. These ideas cooperate, but answer different questions."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "The Job relationship expresses ownership. Cancelling a parent requests cancellation of its descendants. An ordinary child failure other than cancellation affects its parent, which in turn stops sibling work. A dispatcher change does not remove these relationships: a background child can still belong to a main-thread owner."
+            }
           ]
         },
         {
           "type": "code",
-          "code": "fun main() = runBlocking(CoroutineName(\"lab\")) {\n    val parent = coroutineContext[Job]\n    val child = launch(CoroutineName(\"profile\")) {\n        println(coroutineContext[Job])\n        println(coroutineContext[CoroutineName])\n    }\n    println(parent)\n    child.join()\n}"
+          "code": "import kotlinx.coroutines.CoroutineName\nimport kotlinx.coroutines.Dispatchers\nimport kotlinx.coroutines.Job\nimport kotlinx.coroutines.currentCoroutineContext\nimport kotlinx.coroutines.launch\nimport kotlinx.coroutines.runBlocking\n\nfun main() = runBlocking(CoroutineName(\"request\")) {\n    val parent: Job = currentCoroutineContext()[Job]!!\n    val child = launch(Dispatchers.Default + CoroutineName(\"analysis\")) {\n        println(currentCoroutineContext()[CoroutineName]?.name)\n    }\n    println(\"Parent active: ${parent.isActive}\")\n    child.join()\n}"
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Context is a set of elements indexed by keys. Combining contexts with + replaces an earlier element with the same key; it does not build a Job tree by adding several Job elements. A builder creates a new child Job whose parent comes from the launching scope. Other context elements, such as the dispatcher, are normally inherited or overridden. [16]"
+              "text": "Each builder creates a new child Job while inheriting and combining the other context elements. The new name replaces the inherited name, and the supplied dispatcher changes where active code executes. The child still belongs to the runBlocking coroutine. The example’s nullable Job lookup is asserted because runBlocking provides one; arbitrary contexts need not."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Jobs move from active toward completing/completed or cancelling/cancelled. Completion includes waiting for children; cancellation includes allowing cooperative cleanup. isCompleted includes both success and failure. isCancelled does not explain the failure policy by itself. [10]"
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 4",
-          "runs": [
-            {
-              "text": "Draw the tree for runBlocking -> launch -> two async children. Then remove launch and draw it again. The async children now belong directly to runBlocking. Explain why changing a dispatcher does not change the ownership relationship."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Avoid passing a fresh Job to launch or withContext to “fix” failures. It can replace the inherited parent link and break ownership. Decide the lifecycle boundary explicitly before creating a long-lived scope."
+              "text": "Passing a fresh Job directly as a builder context replaces the inherited parent relationship and can detach work from the owner that readers expect. A manually created scope likewise requires an explicit lifecycle and shutdown policy. Framework scopes or lexical scope functions usually make the owner easier to identify. A useful review question is whether leaving the owning screen, request, or service stops every operation that should end with it."
             }
           ]
         }
       ],
-      "group": "OWNERSHIP AND STRUCTURED CONCURRENCY",
-      "referenceNumbers": [
-        10,
-        16
+      "sources": [
+        {
+          "title": "CoroutineScope",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/",
+          "description": "Scope receivers, context elements, and lifecycle conventions."
+        },
+        {
+          "title": "Job",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/",
+          "description": "Job states, parent-child ownership, and cancellation."
+        },
+        {
+          "title": "Coroutine context and dispatchers",
+          "url": "https://kotlinlang.org/docs/coroutine-context-and-dispatchers.html",
+          "description": "Context inheritance and combining dispatcher/name elements."
+        }
       ]
     },
     {
       "id": "coroutines-11",
-      "title": "Structured concurrency",
-      "summary": "A function should finish the work it promises to own",
-      "stage": "WEEK 2",
-      "sourcePage": 11,
+      "title": "Structured concurrency and bounded work",
+      "summary": "A suspending function can own a concurrent group and return only when the group has finished.",
+      "stage": "OWNERSHIP AND BUILDERS",
+      "group": "OWNERSHIP AND BUILDERS",
       "blocks": [
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Use coroutineScope for a group that should succeed or fail as one operation. It inherits execution context, adds a scoped Job, waits for all children, and rethrows failure at its call boundary. That makes ordinary try/catch useful around the whole operation. [9]"
+              "text": "Structured concurrency connects the lifetime of child work to an operation that owns it. A function promising a combined result should not secretly leave its component operations running after it returns or fails. coroutineScope creates a lexical boundary for that promise: it returns after its body and children complete, and the caller’s cancellation reaches the group."
             }
           ]
         },
         {
           "type": "code",
-          "code": "suspend fun fetchAll(): Pair<String, String> = coroutineScope {\n    val profile = async { fetchProfile() }\n    val orders = async { fetchOrders() }\n    profile.await() to orders.await()\n}\nfun main() = runBlocking {\n    try {\n        println(fetchAll())\n    } catch (e: CancellationException) {\n        throw e\n    } catch (e: IllegalStateException) {\n        println(\"Loading failed: ${e.message}\")\n    }\n    println(\"done\")\n}"
+          "code": "import kotlinx.coroutines.async\nimport kotlinx.coroutines.coroutineScope\nimport kotlinx.coroutines.delay\nimport kotlinx.coroutines.runBlocking\n\ndata class Totals(val invoices: Int, val payments: Int)\n\nsuspend fun invoiceTotal(): Int {\n    delay(20)\n    return 120\n}\n\nsuspend fun paymentTotal(): Int {\n    delay(10)\n    return 90\n}\n\nsuspend fun loadTotals(): Totals = coroutineScope {\n    val invoices = async { invoiceTotal() }\n    val payments = async { paymentTotal() }\n    Totals(invoices.await(), payments.await())\n}\n\nfun main() = runBlocking {\n    println(loadTotals())\n}"
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Orders failure cancels profile inside fetchAll. The group finishes its cleanup, then fetchAll throws to its caller. The caller handles the scoped operation’s failure and remains usable: done prints. This is different from allowing a direct async child to fail the caller’s own Job."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "Ownership is a contract"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "A repository suspend function should normally return only when its requested work is complete, cancelled, or failed. Launching into a newly created unrelated scope and returning early changes that contract: the caller can no longer cancel or await the work through the function call."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 5",
-          "runs": [
-            {
-              "text": "Add finally logging to both fetch functions. Run the failing group, then catch its exception. Verify that cleanup happens before the caller’s final message. Next make orders succeed and compare sequential and concurrent timelines."
+              "text": "Both values belong to the loadTotals call. Their work can overlap, but neither outlives the enclosing operation. A failure in either child invalidates this combined result and cancels the other. A caller can catch the scoped operation’s failure at the function boundary; it does not need to know how many children were used internally."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Some work intentionally outlives a screen, such as a durable background upload. Give it a named application owner or an appropriate Android background-work mechanism. Detaching a coroutine is not a durability guarantee; process death can still end it."
+              "text": "Cancellation requests do not mean that termination is already complete. A child may need to observe cancellation and release resources. The structured boundary waits for that termination, which makes ownership meaningful even during failure. A noncooperative loop or blocking operation can therefore delay the whole group’s completion."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": true,
           "runs": [
             {
-              "text": "Official reading: [9] coroutineScope; [21] Android best practices. Sources are linked on pages 41-42."
+              "text": "Some work intentionally belongs to a longer-lived component, such as an application-owned synchronization service. That work needs an explicitly supplied owner with its own cancellation and error policy. Replacing the caller with GlobalScope merely to keep a task alive hides the lifetime decision. A function’s contract should make clear whether it completes work itself or deliberately schedules work for another owner."
             }
           ]
         }
       ],
-      "group": "OWNERSHIP AND STRUCTURED CONCURRENCY",
-      "referenceNumbers": [
-        9,
-        21
+      "sources": [
+        {
+          "title": "coroutineScope",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html",
+          "description": "Lexically bounded concurrent work and failure propagation."
+        },
+        {
+          "title": "CoroutineScope",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/",
+          "description": "Lifecycle ownership and structured completion."
+        }
       ]
     },
     {
       "id": "coroutines-12",
-      "title": "Cancellation is cooperative",
-      "summary": "A cancellation request must be observed by the running work",
-      "stage": "WEEK 3",
-      "sourcePage": 12,
+      "title": "Cooperative cancellation",
+      "summary": "Stopping work requires cancellation-aware suspension points or explicit checks.",
+      "stage": "CANCELLATION AND FAILURE",
+      "group": "CANCELLATION AND FAILURE",
       "blocks": [
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Cancellation asks a Job to stop. Cancellable suspending operations such as delay and await observe it and throw CancellationException. A child cancelled this way does not normally fail its parent. Cancellation of a parent still travels down to children, including supervised children."
+              "text": "Cancellation is a request communicated through a coroutine’s Job. It prevents unwanted work from continuing when its owner stops caring about the result. Cancellable suspending APIs such as delay and await check this state and throw CancellationException. Ordinary computation does not automatically inspect the Job at every instruction."
             }
           ]
         },
         {
           "type": "code",
-          "code": "fun main() = runBlocking {\n    val profile = launch {\n        try {\n            println(fetchProfile())\n        } finally {\n            println(\"profile cleanup\")\n        }\n    }\n    delay(20)\n    profile.cancelAndJoin()\n    println(\"parent continues\")\n}"
+          "code": "import kotlinx.coroutines.Dispatchers\nimport kotlinx.coroutines.currentCoroutineContext\nimport kotlinx.coroutines.ensureActive\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.withContext\n\nsuspend fun squareTotal(values: List<Int>): Long =\n    withContext(Dispatchers.Default) {\n        var total = 0L\n        for ((index, value) in values.withIndex()) {\n            if (index % 256 == 0) currentCoroutineContext().ensureActive()\n            total += value.toLong() * value\n        }\n        total\n    }\n\nfun main() = runBlocking {\n    println(squareTotal(listOf(1, 2, 3)))\n}"
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "cancel() requests cancellation; join() waits for termination; cancelAndJoin() combines them. After it returns, this child’s finally block has completed. Cancelling a task does not roll back database writes or other side effects that already happened."
+              "text": "ensureActive throws when the current coroutine is cancelled. The periodic check gives this CPU loop a stopping opportunity without introducing a suspension after every element. The interval is a workload choice: expensive individual iterations may need finer-grained checks. yield is another cooperative primitive that can also let other runnable coroutines progress."
             }
           ]
         },
         {
-          "type": "heading",
-          "text": "CPU loops need cancellation checks"
-        },
-        {
-          "type": "code",
-          "code": "suspend fun checksum(bytes: ByteArray): Long =\n    withContext(Dispatchers.Default) {\n        var total = 0L\n        for (i in bytes.indices) {\n            if (i % 4096 == 0) ensureActive()\n            total += bytes[i].toLong()\n        }\n        total\n    }"
-        },
-        {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "ensureActive throws when the current Job is cancelled. yield also gives other work a scheduling opportunity. A busy loop with neither checks nor suspension can delay cancellation indefinitely. Blocking code may need API-specific cancellation or runInterruptible when interruption is supported. [5, 6]"
+              "text": "Cancellation normally travels from an owner to its children. Cancelling one ordinary child by itself does not fail its parent in the way a non-cancellation exception does. cancel requests stopping; cancelAndJoin also waits until that child has terminated. Cleanup may still be running between those events."
             }
           ]
         },
         {
-          "type": "note",
-          "title": "Exercise 6",
+          "type": "paragraph",
           "runs": [
             {
-              "text": "Cancel profile after 20 ms and confirm that “profile” is absent but cleanup runs. For a CPU loop, compare cancellation with and without periodic ensureActive. Explain why putting a loop on Default does not itself make it cooperative."
+              "text": "Broad catch blocks can intercept CancellationException because it is an exception. Converting it into a normal failure value makes code appear to have recovered after its owner stopped it. Error-handling helpers should rethrow cancellation, and blocking libraries need appropriate cancellation support or documented limits. Merely wrapping a blocking call in a suspending function does not make that call interruptible."
             }
           ]
         }
       ],
-      "group": "CANCELLATION AND FAILURE",
-      "referenceNumbers": [
-        5,
-        6
+      "sources": [
+        {
+          "title": "ensureActive",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/ensure-active.html",
+          "description": "Explicit cooperative checks for non-suspending computation."
+        },
+        {
+          "title": "Job",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/",
+          "description": "Cancellation requests, termination, and parent-child behavior."
+        }
       ]
     },
     {
       "id": "coroutines-13",
-      "title": "Cleanup and deadlines",
-      "summary": "Make stopping safe without turning cancellation into a failure",
-      "stage": "WEEK 3",
-      "sourcePage": 13,
+      "title": "Cleanup and time limits",
+      "summary": "Resource release belongs in finally; timeouts request cancellation rather than forcibly stopping execution.",
+      "stage": "CANCELLATION AND FAILURE",
+      "group": "CANCELLATION AND FAILURE",
       "blocks": [
         {
-          "type": "code",
-          "code": "suspend fun profileBeforeDeadline(): String? =\n    withTimeoutOrNull(80) {\n        fetchProfile()\n    }"
-        },
-        {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "The deadline is shorter than the fixture’s 100 ms delay, so this returns null. withTimeout instead throws TimeoutCancellationException. withTimeoutOrNull converts its own timeout into null; an outer cancellation still propagates. A timeout is cooperative, not a forced termination of arbitrary blocking code. [7]"
+              "text": "A cancelled coroutine still unwinds its stack, so finally is the normal place to release resources acquired by an operation. Closing an in-memory handle or a file can often be done synchronously there. Suspending cleanup needs special care because the Job may already be cancelled and a cancellable suspending call can immediately throw again."
             }
           ]
-        },
-        {
-          "type": "heading",
-          "text": "Release resources in finally"
         },
         {
           "type": "code",
-          "code": "suspend fun workWithCleanup() {\n    try {\n        delay(1_000)\n    } finally {\n        // Most cleanup should be immediate and non-suspending.\n        withContext(NonCancellable) {\n            delay(10) // Simulated bounded suspending cleanup.\n            println(\"released\")\n        }\n    }\n}"
+          "code": "import kotlinx.coroutines.NonCancellable\nimport kotlinx.coroutines.delay\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.withContext\nimport kotlinx.coroutines.withTimeoutOrNull\n\nclass Connection {\n    suspend fun read(): String {\n        delay(100)\n        return \"response\"\n    }\n    suspend fun close() {\n        delay(5)\n        println(\"Connection closed\")\n    }\n}\n\nsuspend fun readConnection(): String {\n    val connection = Connection()\n    try {\n        return connection.read()\n    } finally {\n        withContext(NonCancellable) { connection.close() }\n    }\n}\n\nfun main() = runBlocking {\n    val response = withTimeoutOrNull(20) { readConnection() }\n    println(response ?: \"Read timed out\")\n}"
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "finally executes during cancellation. Its normal suspending calls may immediately throw because the Job is cancelled. A small NonCancellable block allows necessary suspending cleanup to finish. Keep it bounded: a never-ending cleanup prevents the owning scope from finishing. Do not wrap normal fetching or long retries in NonCancellable."
+              "text": "The narrow NonCancellable region allows this illustrative suspending close to finish while cancellation is being processed. It should remain bounded and focused on release. Long network retries or new business operations in that region postpone shutdown and defeat the owner’s stopping policy. NonCancellable should not be passed to launch or async to keep ordinary work alive."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "When handling ordinary failures, catch CancellationException first and rethrow it. Broad catch(Exception) also matches cancellation; swallowing it can let cancelled work continue through non-suspending code and publish misleading results."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 7",
-          "runs": [
-            {
-              "text": "Change the deadline to 150 ms and predict the value. Then cancel the outer caller while the deadline block runs. Confirm that outer cancellation is not reported as an orders error. Add a cleanup delay and explain when NonCancellable is necessary."
+              "text": "withTimeout throws TimeoutCancellationException when its own deadline expires. withTimeoutOrNull instead represents its own timeout with null; cancellation from an outer owner still propagates. A timeout does not forcibly interrupt arbitrary CPU code or a blocking library call, so observed elapsed time can exceed its duration while work and cleanup terminate."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Close resources within the operation that owns them, using use or try/finally. Cancellation can race with returning a resource across a dispatcher or timeout boundary. Avoid assuming a closeable resource assigned outside a timed block will always be available for cleanup."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": true,
-          "runs": [
-            {
-              "text": "Official reading: [7] withTimeout; [12] withContext; [21] Best practices. Sources are linked on pages 41-42."
+              "text": "Timeout cancellation can race with producing a value. Resource acquisition is therefore safest when acquisition and release share an enclosing ownership boundary. Returning a newly acquired closeable resource from a timed block without protecting the handoff can lose the resource if cancellation wins before the caller receives it."
             }
           ]
         }
       ],
-      "group": "CANCELLATION AND FAILURE",
-      "referenceNumbers": [
-        7,
-        12,
-        21
+      "sources": [
+        {
+          "title": "withTimeout",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html",
+          "description": "Timeout cancellation and races at completion."
+        },
+        {
+          "title": "NonCancellable",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-non-cancellable/",
+          "description": "Narrow cancellation-resistant cleanup and builder limitations."
+        },
+        {
+          "title": "withTimeoutOrNull",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout-or-null.html",
+          "description": "A timeout boundary with a nullable result and cooperative stopping."
+        }
       ]
     },
     {
       "id": "coroutines-14",
-      "title": "Exception propagation",
-      "summary": "Failure policy and error observation are separate mechanisms",
-      "stage": "WEEK 3",
-      "sourcePage": 14,
+      "title": "Failure propagation and exception observation",
+      "summary": "A failed child affects ownership before a caller necessarily observes its result.",
+      "stage": "CANCELLATION AND FAILURE",
+      "group": "CANCELLATION AND FAILURE",
       "blocks": [
         {
-          "type": "table",
-          "headers": [
-            "Case",
-            "What to expect"
-          ],
-          "rows": [
-            [
-              "Normal child launch fails",
-              "Parent fails and cancels siblings; error travels upward."
-            ],
-            [
-              "Normal child async fails",
-              "Deferred stores the error AND parent fails; await is not required for parent cancellation."
-            ],
-            [
-              "Supervised async fails",
-              "Siblings survive; await exposes the stored error."
-            ],
-            [
-              "Supervised launch fails",
-              "Siblings survive; unhandled exception still needs reporting or local handling."
-            ],
-            [
-              "Child cancelled",
-              "CancellationException normally does not fail its parent."
-            ]
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "An ordinary coroutine hierarchy treats an unhandled non-cancellation exception in a child as failure of its parent. The parent requests cancellation of its other children and waits for termination. This is the failure policy behind an all-or-nothing group. CancellationException is treated as normal cancellation rather than a new error that fails the parent."
+            }
           ]
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "CoroutineExceptionHandler reports an uncaught exception after the coroutine has failed. It cannot restart that coroutine or return a fallback value. Normal children delegate failure to their parent; putting a handler on each child does not change the parent’s failure policy. async exposes errors through Deferred instead of invoking its own handler. [4]"
+              "text": "async stores an outcome in Deferred, and await retrieves the value or throws that outcome’s exception. Storing the exception does not isolate a child from its ordinary parent. Failure can already have cancelled sibling work before await executes. By contrast, supervision changes the parent’s response to a direct child failure, allowing that failure to remain independent until application code handles it."
             }
           ]
         },
         {
           "type": "code",
-          "code": "val handler = CoroutineExceptionHandler { _, error ->\n    println(\"Uncaught: ${error.message}\")\n}\n// Inside a runBlocking body:\nsupervisorScope {\n    val child = launch(handler) {\n        throw IllegalStateException(\"Wrong orders\")\n    }\n    child.join() // Waits; does not retrieve/rethrow child failure.\n    println(\"supervisor continues\")\n}"
+          "code": "import java.io.IOException\nimport kotlinx.coroutines.async\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.supervisorScope\n\nfun main() = runBlocking {\n    supervisorScope {\n        val result = async<String> { throw IOException(\"Unavailable\") }\n        try {\n            println(result.await())\n        } catch (failure: IOException) {\n            println(\"Recovered: ${failure.message}\")\n        }\n    }\n}"
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Use try/catch inside an operation when it can recover. Use a handler as last-resort reporting for suitable launch roots or supervised launch children. Use await and explicit handling for supervised async results. Supervision and exception reporting solve different problems."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 8",
-          "runs": [
-            {
-              "text": "Predict whether a handler runs for supervised launch and supervised async. For async, add a caught await. For normal async, draw the upward cancellation path even if await is never called. Avoid using GlobalScope to hide the hierarchy."
+              "text": "The catch is inside the supervisor block, so the observed IOException does not escape and fail that block. In an ordinary coroutineScope, catching only await inside its already-cancelled body would not undo the child’s earlier effect on the group. Catching the scoped function call outside that boundary is the corresponding recovery pattern."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": true,
           "runs": [
             {
-              "text": "Official reading: [4] Exceptions; [8] supervisorScope; [11] async. Sources are linked on pages 41-42."
+              "text": "CoroutineExceptionHandler receives uncaught exceptions at eligible root or supervised launch boundaries. It is a reporting mechanism after failure, not a way to resume the failed coroutine. It does not retrieve an async outcome, and installing it on an ordinary child does not stop failure from reaching the owner. Recoverable operations need explicit try/catch or an intentional result model where recovery is still possible."
             }
           ]
         }
       ],
-      "group": "CANCELLATION AND FAILURE",
-      "referenceNumbers": [
-        4,
-        8,
-        11
+      "sources": [
+        {
+          "title": "Coroutine exceptions handling",
+          "url": "https://kotlinlang.org/docs/exception-handling.html",
+          "description": "Propagation, cancellation exceptions, and uncaught exception handlers."
+        },
+        {
+          "title": "Deferred.await",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/await.html",
+          "description": "Observation of stored results and exceptional completion."
+        }
       ]
     },
     {
       "id": "coroutines-15",
-      "title": "coroutineScope vs supervisorScope",
-      "summary": "Choose whether a sibling’s success remains useful after a failure",
-      "stage": "WEEK 3",
-      "sourcePage": 15,
+      "title": "coroutineScope and supervisorScope",
+      "summary": "Choose whether a failed child invalidates sibling work, then define how each failure is handled.",
+      "stage": "CANCELLATION AND FAILURE",
+      "group": "CANCELLATION AND FAILURE",
       "blocks": [
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Use coroutineScope when all results are required. Use supervisorScope when independent child failures should not cancel siblings. Both functions wait for children, both remain attached to the caller, and caller cancellation cancels the whole group. [8, 9]"
+              "text": "coroutineScope and supervisorScope both create bounded operations that wait for their body and children. Both inherit cancellation from their caller. Their difference is the response to a direct child’s non-cancellation failure. coroutineScope fails the group, while supervisorScope allows the other direct children to continue."
             }
           ]
         },
         {
           "type": "code",
-          "code": "fun main() = runBlocking {\n    supervisorScope {\n        val profile = async { fetchProfile() }\n        val orders = async { fetchOrders() }\n        println(\"profile: ${profile.await()}\")\n        try {\n            println(\"orders: ${orders.await()}\")\n        } catch (e: CancellationException) {\n            throw e\n        } catch (e: IllegalStateException) {\n            println(\"orders unavailable: ${e.message}\")\n        }\n    }\n    println(\"done\")\n}"
+          "code": "import java.io.IOException\nimport kotlinx.coroutines.async\nimport kotlinx.coroutines.delay\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.supervisorScope\n\nsuspend fun independentLabels(): Pair<String, String> = supervisorScope {\n    val title = async {\n        delay(30)\n        \"Account\"\n    }\n    val badge = async<String> {\n        delay(10)\n        throw IOException(\"Badge unavailable\")\n    }\n    val badgeText = try {\n        badge.await()\n    } catch (failure: IOException) {\n        \"No badge\"\n    }\n    title.await() to badgeText\n}\n\nfun main() = runBlocking {\n    println(independentLabels())\n}"
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Expected output: profile: profile; orders unavailable: Wrong orders; done. Orders fails earlier, but its Deferred does not fail the supervisor. Profile finishes, then the stored orders failure is handled at await."
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "caller\n  +-- supervisorScope\n        +-- profile async  -> completes\n        +-- orders async   -> fails (observed at await)\n\ncaller cancellation -> supervisor -> both children stop"
-        },
-        {
-          "type": "note",
-          "title": "The escaping-await trap",
-          "runs": [
-            {
-              "text": "If orders.await() runs first and its error is not caught inside the supervisor block, the block itself throws. That fails the supervisor block and cancels its remaining children, including profile. Catching outside supervisorScope happens after that cancellation; it cannot preserve the unfinished child."
+              "text": "The failed badge child does not cancel title. The local catch also prevents badge.await from throwing out of the supervisor block, so title can supply its result. The fallback is an explicit policy for this expected IOException. Other exceptions continue to propagate rather than silently turning into a missing badge."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "If profile can fail too, handle it independently. On page 20, both children produce explicit Result values. The requirement is a successful partial result, not merely “no crash.”"
+              "text": "Supervision does not catch exceptions thrown by the supervisor’s own body. If badge.await were allowed to throw out of the block, that block would fail and cancel any remaining children. A catch outside supervisorScope can observe the failure, but cannot retroactively preserve work cancelled during that escape. Independent result handling must happen inside the boundary when unfinished siblings should remain useful."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Supervision also applies only at the supervised parent-child relationship. An ordinary launch inside a supervisor can create its own async children; failure in that nested ordinary group can cancel its siblings there. The outer supervisor then isolates the failed launch from its other direct children. Choosing a scope therefore requires both the dependency policy and the actual Job hierarchy."
+            }
+          ]
+        },
+        {
+          "type": "checkpoint",
+          "prompt": "Does supervisorScope make every await safe to call?",
+          "runs": [
+            {
+              "text": "No. It isolates a child failure from its siblings, but await still exposes that failure. If the exception escapes the supervisor block, the block fails and unfinished children are cancelled. Independent results need an explicit per-result recovery policy that preserves cancellation."
             }
           ]
         }
       ],
-      "group": "CANCELLATION AND FAILURE",
-      "referenceNumbers": [
-        4,
-        8,
-        9
+      "sources": [
+        {
+          "title": "supervisorScope",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/supervisor-scope.html",
+          "description": "Child independence, caller cancellation, and failure of the supervisor block."
+        },
+        {
+          "title": "coroutineScope",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html",
+          "description": "All-or-nothing grouping for required subtasks."
+        }
       ]
     },
     {
       "id": "coroutines-16",
-      "title": "Job vs SupervisorJob",
-      "summary": "Scope functions are lexical; job objects need an owner",
-      "stage": "WEEK 3",
-      "sourcePage": 16,
+      "title": "Job and SupervisorJob ownership",
+      "summary": "Long-lived scopes need explicit shutdown; supervision applies to direct children.",
+      "stage": "CANCELLATION AND FAILURE",
+      "group": "CANCELLATION AND FAILURE",
       "blocks": [
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Job() creates an ordinary lifecycle parent. A non-cancellation child failure fails it and cancels siblings. SupervisorJob() keeps direct children independent. Neither object supplies a dispatcher nor executes a block by itself. Build an owned CoroutineScope around it when a component needs a longer lifetime. [10, 13]"
+              "text": "Job and SupervisorJob are lifecycle objects that can form the root of a manually managed CoroutineScope. A regular Job reacts to an unhandled child failure by cancelling itself and its other children. A SupervisorJob allows its direct children to fail independently. Both still cancel their children when the owner cancels the parent Job."
             }
           ]
         },
         {
           "type": "code",
-          "code": "class ProfileWorker : AutoCloseable {\n    private val owner = SupervisorJob()\n    private val scope = CoroutineScope(\n        owner + Dispatchers.Default + CoroutineName(\"worker\")\n    )\n    fun refresh(): Job = scope.launch {\n        try {\n            println(fetchProfile())\n        } catch (e: CancellationException) {\n            throw e\n        } catch (e: Exception) {\n            println(\"Refresh failed: ${e.message}\")\n        }\n    }\n    override fun close() { owner.cancel() }\n}"
+          "code": "import kotlinx.coroutines.CoroutineScope\nimport kotlinx.coroutines.Dispatchers\nimport kotlinx.coroutines.Job\nimport kotlinx.coroutines.SupervisorJob\nimport kotlinx.coroutines.cancelAndJoin\nimport kotlinx.coroutines.delay\nimport kotlinx.coroutines.launch\nimport kotlinx.coroutines.runBlocking\n\nclass RefreshOwner {\n    private val ownerJob = SupervisorJob()\n    private val scope = CoroutineScope(ownerJob + Dispatchers.Default)\n\n    fun refresh(): Job = scope.launch {\n        delay(10)\n        println(\"Refreshed\")\n    }\n\n    suspend fun close() {\n        ownerJob.cancelAndJoin()\n    }\n}\n\nfun main() = runBlocking {\n    val owner = RefreshOwner()\n    try {\n        owner.refresh().join()\n    } finally {\n        owner.close()\n    }\n}"
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "This illustrative component cancels its owned tasks when closed. close requests cancellation; it does not wait for cleanup. An owner requiring completed shutdown should expose a suspend stop method that cancels and joins. Android components usually use provided scopes instead of building another one."
+              "text": "This example gives a component an explicit owner and a suspending shutdown method. Its lifetime is deliberately managed by the surrounding caller, because the independently created SupervisorJob has no inherited parent. In framework code an existing lifecycle scope often supplies that management. Creating a scope for every function call makes ownership harder to see and is rarely necessary."
             }
           ]
         },
         {
-          "type": "heading",
-          "text": "Supervision applies at one parent-child edge"
-        },
-        {
-          "type": "code",
-          "code": "SupervisorJob\n  +-- launch A (ordinary coroutine Job)\n  |     +-- async profile\n  |     +-- async orders\n  +-- launch B"
-        },
-        {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Orders failure still cancels profile because both are children of ordinary launch A. The supervisor protects B from A’s failure; it does not automatically supervise grandchildren. Put supervisorScope inside A to make profile and orders independent there."
+              "text": "The factory-created Job itself has no coroutine body that naturally finishes. Waiting for its children is not the same as completing that owner; it needs explicit cancellation or completion. Its handle should therefore live with the component responsible for shutdown."
             }
           ]
         },
         {
-          "type": "note",
-          "title": "Exercise 9",
+          "type": "paragraph",
           "runs": [
             {
-              "text": "Compare the tree above with two async calls launched directly in the supervisor scope. Explain why launch(SupervisorJob()) is a poor shortcut: it replaces ownership and the launch still has ordinary child-failure behavior."
+              "text": "SupervisorJob does not automatically handle errors. A supervised launch still needs a local catch or an appropriate uncaught-exception reporting policy. A supervised async still needs its outcome observed. Passing SupervisorJob directly to launch also does not make that launch’s own children mutually independent: those children belong to the new ordinary launch Job. Lexical supervisorScope is usually clearer for independent work within one suspending function."
             }
           ]
         }
       ],
-      "group": "CANCELLATION AND FAILURE",
-      "referenceNumbers": [
-        10,
-        13,
-        29
+      "sources": [
+        {
+          "title": "SupervisorJob",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-supervisor-job.html",
+          "description": "Direct-child independence and optional linkage to a parent Job."
+        },
+        {
+          "title": "Job",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/",
+          "description": "Lifecycle state and explicit completion of factory-created Jobs."
+        }
       ]
     },
     {
       "id": "coroutines-17",
-      "title": "Dispatchers and main safety",
-      "summary": "Move work according to what it does",
-      "stage": "WEEK 3",
-      "sourcePage": 17,
+      "title": "Dispatchers and main-safe APIs",
+      "summary": "The layer performing blocking or expensive work owns the decision to move it.",
+      "stage": "EXECUTION AND RESULTS",
+      "group": "EXECUTION AND RESULTS",
       "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "A dispatcher determines where runnable coroutine code is executed. On Android, Main is for UI-confined work, Default suits substantial CPU computation, and IO suits blocking I/O. These categories describe the work performed, not the name of the function. A network library with a genuinely suspending API may already manage its own waiting and threads."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "A main-safe suspending function can be called from the main thread without blocking it with long-running work. The implementation responsible for that work should move it to an appropriate dispatcher. This lets a caller compose operations without needing knowledge of file access, parsing, or transport internals."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "code": "import java.io.File\nimport kotlinx.coroutines.CoroutineDispatcher\nimport kotlinx.coroutines.Dispatchers\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.withContext\n\nclass TextStore(\n    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO\n) {\n    suspend fun read(file: File): String = withContext(ioDispatcher) {\n        file.readText()\n    }\n}\n\nfun main() = runBlocking {\n    val file = File.createTempFile(\"coroutine-reference\", \".txt\")\n    try {\n        file.writeText(\"hello\")\n        println(TextStore().read(file))\n    } finally {\n        file.delete()\n    }\n}"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "The repository-style read method owns dispatching because file.readText is blocking. The console boundary creates the fixture synchronously; it is not an example of Android UI work. Injecting the dispatcher makes the execution policy replaceable, which also helps tests coordinate scheduling. A large subsequent parse would need its own CPU-work policy rather than assuming IO is appropriate for every part of the operation."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "withContext returns to its caller’s context after its bounded work. It does not detach the operation or keep it alive after owner cancellation. Choosing IO does not make an arbitrary blocking API cooperatively cancellable, and choosing Default does not make shared mutable state thread-safe. Execution placement, cancellation, and synchronization remain separate responsibilities."
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "Android coroutine best practices",
+          "url": "https://developer.android.com/kotlin/coroutines/coroutines-best-practices",
+          "description": "Main-safe suspending functions and injected dispatchers."
+        },
+        {
+          "title": "withContext",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html",
+          "description": "Bounded execution in an updated context and return to the caller."
+        }
+      ]
+    },
+    {
+      "id": "coroutines-18",
+      "title": "async, await, and withContext",
+      "summary": "Use explicit concurrent children when independent values can overlap useful work.",
+      "stage": "EXECUTION AND RESULTS",
+      "group": "EXECUTION AND RESULTS",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "withContext executes a bounded block and returns its value before the caller continues. It is often used to move one blocking or CPU-heavy operation to the right dispatcher. async creates a separate child and schedules it under its default start mode, returning Deferred<T>; await later obtains that child’s value or failure."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "code": "import kotlinx.coroutines.async\nimport kotlinx.coroutines.coroutineScope\nimport kotlinx.coroutines.delay\nimport kotlinx.coroutines.runBlocking\n\nsuspend fun lookup(id: Int): String {\n    delay(10)\n    return \"record-$id\"\n}\n\nsuspend fun sequentialNames(): String {\n    val first = lookup(1)\n    val second = lookup(2)\n    return \"$first, $second\"\n}\n\nsuspend fun concurrentNames(): String = coroutineScope {\n    val first = async { lookup(1) }\n    val second = async { lookup(2) }\n    \"${first.await()}, ${second.await()}\"\n}\n\nfun main() = runBlocking {\n    println(sequentialNames())\n    println(concurrentNames())\n}"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "The sequential function expresses a simple order. The concurrent function starts both independent children before waiting for either result. Awaiting first before second does not make second start later: its default async was already scheduled. However, async { lookup(1) }.await() followed by a second async-and-await would serialize these operations."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Lazy async changes this detail. A lazy child begins when explicitly started or when awaited, so awaiting the first lazy child before starting the second removes the intended overlap. Laziness is a deliberate scheduling choice, not a prerequisite for Deferred."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Concurrency can reduce waiting when operations are independent, but it consumes resources and adds failure interactions. If the second operation needs the first result, sequential calls communicate that dependency directly. If only one operation is needed in a different dispatcher, withContext usually communicates the intent more clearly than async followed immediately by await. Both remain structured when used under the caller’s ownership."
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "Composing suspending functions",
+          "url": "https://kotlinlang.org/docs/composing-suspending-functions.html",
+          "description": "Sequential calls, concurrent async values, and lazy-start behavior."
+        },
+        {
+          "title": "withContext",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html",
+          "description": "Returning one bounded result from an updated context."
+        }
+      ]
+    },
+    {
+      "id": "coroutines-19",
+      "title": "Errors as values without swallowing cancellation",
+      "summary": "Result retains success or failure details; domain types can express expected alternatives more precisely.",
+      "stage": "EXECUTION AND RESULTS",
+      "group": "EXECUTION AND RESULTS",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "An exception means an operation did not return a normal value. Sometimes that should fail the whole operation; sometimes the caller needs to retain the failure alongside other successful data. Result<T> can represent either a T or a Throwable. A domain-specific sealed type is another option when the application has meaningful alternatives such as NotFound, PermissionDenied, or Ready."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "code": "import java.io.IOException\nimport kotlinx.coroutines.CancellationException\nimport kotlinx.coroutines.delay\nimport kotlinx.coroutines.runBlocking\n\nsuspend fun <T> ioResult(block: suspend () -> T): Result<T> = try {\n    Result.success(block())\n} catch (cancelled: CancellationException) {\n    throw cancelled\n} catch (failure: IOException) {\n    Result.failure(failure)\n}\n\nsuspend fun readMessage(): String {\n    delay(10)\n    throw IOException(\"Temporary read failure\")\n}\n\nfun main() = runBlocking {\n    val message = ioResult { readMessage() }\n    println(message.fold(\n        onSuccess = { it },\n        onFailure = { \"Read unavailable: ${it.message}\" }\n    ))\n}"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "This helper converts only its declared expected I/O failure family. It preserves cancellation as control flow and leaves programming defects or other unexpected exceptions exceptional. A broader Exception catch can be intentional at an application boundary, but should not silently classify every defect as ordinary missing data. Catching Throwable would also include errors that recovery code often cannot safely handle."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "The standard runCatching catches any Throwable, including CancellationException. Used around suspending work, it therefore requires an explicit cancellation policy. A cancellation-aware helper makes that policy visible rather than depending on every consumer to detect a stored cancellation later."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "getOrNull discards the difference between failed work and a successful nullable value, so it is appropriate only when that loss is deliberate. fold or an explicit domain type preserves enough information for recovery, diagnostics, and UI choices. A Result value also does not undo cancellation already caused by a failed ordinary child: conversion is most useful inside the child before its expected exception escapes."
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "Result",
+          "url": "https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-result/",
+          "description": "Success and failure values and outcome inspection."
+        },
+        {
+          "title": "runCatching",
+          "url": "https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/run-catching.html",
+          "description": "The standard helper catches any Throwable."
+        }
+      ]
+    },
+    {
+      "id": "coroutines-20",
+      "title": "Partial success as an operation contract",
+      "summary": "Independent result fields preserve useful data while caller cancellation still stops the group.",
+      "stage": "EXECUTION AND RESULTS",
+      "group": "EXECUTION AND RESULTS",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Partial success is a result contract, not an automatic effect of async or supervision. A dashboard that can show a profile even when activity fails needs a representation for both outcomes. Expected failures should become values at the individual operation boundary. Cancellation should still stop the complete dashboard request when its owner leaves."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "code": "import java.io.IOException\nimport kotlinx.coroutines.CancellationException\nimport kotlinx.coroutines.async\nimport kotlinx.coroutines.delay\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.supervisorScope\n\ndata class Dashboard(\n    val profile: Result<String>,\n    val activity: Result<List<String>>\n)\n\nsuspend fun profile(): String {\n    delay(30)\n    return \"Ada\"\n}\n\nsuspend fun activity(): List<String> {\n    delay(10)\n    throw IOException(\"Activity unavailable\")\n}\n\nsuspend fun <T> expectedIo(block: suspend () -> T): Result<T> = try {\n    Result.success(block())\n} catch (cancelled: CancellationException) {\n    throw cancelled\n} catch (failure: IOException) {\n    Result.failure(failure)\n}\n\nsuspend fun dashboard(): Dashboard = supervisorScope {\n    val profileResult = async { expectedIo { profile() } }\n    val activityResult = async { expectedIo { activity() } }\n    Dashboard(profileResult.await(), activityResult.await())\n}\n\nfun main() = runBlocking {\n    val result = dashboard()\n    println(result.profile.fold(\n        onSuccess = { \"Profile: $it\" },\n        onFailure = { \"Profile unavailable: ${it.message}\" }\n    ))\n    println(result.activity.fold(\n        onSuccess = { \"Activity count: ${it.size}\" },\n        onFailure = { \"Activity unavailable: ${it.message}\" }\n    ))\n}"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Both children start before either await. The expected IOException is converted within the activity child, so that child completes normally with Result.failure. The profile can therefore complete and remain available in the returned Dashboard. Both fields are inspected rather than collapsed into one generic fallback."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "For these converted failures, coroutineScope would also preserve the profile: neither child Job fails. supervisorScope additionally expresses independence if an unexpected child exception occurs. It does not guarantee a Dashboard for every defect. An unexpected exception observed by await and allowed to escape the supervisor body still fails that operation and cancels remaining children."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "The helper rethrows cancellation, so an outer cancellation is not rendered as an activity outage. The caller continues to own both requests, and the function waits for their termination before returning or failing. A production result model may replace Result with explicit domain alternatives, but the same design questions remain: which data is independently useful, which failures are expected, and where should unexpected failure terminate the operation?"
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "SupervisorJob",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-supervisor-job.html",
+          "description": "Independent child failure policy without detaching from an owner."
+        },
+        {
+          "title": "supervisorScope",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/supervisor-scope.html",
+          "description": "Bounded supervision and failure escaping the block."
+        },
+        {
+          "title": "Result",
+          "url": "https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-result/",
+          "description": "Retaining successful values and expected failures independently."
+        }
+      ]
+    },
+    {
+      "id": "coroutines-38",
+      "title": "Shared mutable state and atomic updates",
+      "summary": "Protect the full invariant across threads and suspension points.",
+      "stage": "EXECUTION AND RESULTS",
+      "group": "EXECUTION AND RESULTS",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Coroutines can interleave on one thread and execute in parallel on several threads. A read followed later by a write is not necessarily one indivisible operation. On one thread, suspension between the two steps lets another coroutine observe and replace the same value. Across threads, even a non-suspending counter increment can race. A volatile field improves visibility but does not make a compound read-modify-write atomic."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "The right protection depends on the invariant. An atomic counter suits a single numeric operation. MutableStateFlow.update atomically replaces one state value, and immutable state can place related fields within that single update. Its update function may be evaluated again under contention, so sending a request or writing a log with business meaning inside that function risks repeated side effects. A Mutex can guard a larger operation or several related fields when every access follows the same locking discipline."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "code": "import kotlinx.coroutines.coroutineScope\nimport kotlinx.coroutines.launch\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.sync.Mutex\nimport kotlinx.coroutines.sync.withLock\n\nclass Inventory(private var stock: Int) {\n    private val mutex = Mutex()\n\n    suspend fun reserve(): Boolean = mutex.withLock {\n        if (stock == 0) false else {\n            stock -= 1\n            true\n        }\n    }\n\n    suspend fun remaining(): Int = mutex.withLock { stock }\n}\n\nfun main() = runBlocking {\n    val inventory = Inventory(1)\n    coroutineScope {\n        repeat(2) {\n            launch { println(inventory.reserve()) }\n        }\n    }\n    println(inventory.remaining())\n}"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Here stock inspection and decrement share one critical section; callers cannot both reserve the final item. Mutex waiting suspends rather than occupying a thread, but the lock still serializes access. Long network operations under a lock can create unnecessary contention. Mutex is non-reentrant, so calling another function that acquires the same lock from inside a locked section can suspend indefinitely. Thread confinement is another option, provided the whole invariant remains confined and suspension does not expose an unfinished transaction."
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "Shared mutable state and concurrency",
+          "url": "https://kotlinlang.org/docs/shared-mutable-state-and-concurrency.html",
+          "description": "Visibility, atomicity, confinement, and synchronization."
+        },
+        {
+          "title": "Mutex API",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.sync/-mutex/",
+          "description": "Suspending mutual exclusion and non-reentrant locking."
+        },
+        {
+          "title": "Atomic StateFlow update",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/update.html",
+          "description": "Atomic replacement with a function that may be evaluated repeatedly."
+        }
+      ]
+    },
+    {
+      "id": "coroutines-21",
+      "title": "Cold Flow and collection",
+      "summary": "Represent values that arrive over time, with collection as the execution boundary.",
+      "stage": "STREAMS AND STATE",
+      "group": "STREAMS AND STATE",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "A suspending function returns one result; a Flow can describe a sequence of results separated by suspension. A flow built with flow { } is cold: constructing it describes work, and collecting it starts that work. Each collection invokes the builder again. Two collectors of a database observation may therefore establish two observations unless another layer shares the upstream work. The Flow interface itself does not promise cold behavior; hot implementations also implement Flow."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Without a concurrency operator, emission, transformation, and collection proceed sequentially. emit suspends when downstream needs time, so a slow collector naturally slows the producer. Suspension does not imply a dedicated thread or automatic background execution. Expensive blocking work still needs an appropriate execution context. flowOn changes the context of the operators upstream of it while preserving the collector’s context."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "code": "import kotlinx.coroutines.delay\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.flow.Flow\nimport kotlinx.coroutines.flow.collect\nimport kotlinx.coroutines.flow.flow\n\nfun countdown(): Flow<Int> = flow {\n    for (number in 3 downTo 1) {\n        delay(100)\n        emit(number)\n    }\n}\n\nfun main() = runBlocking {\n    val numbers = countdown()\n    numbers.collect { println(\"First: $it\") }\n    numbers.collect { println(\"Second: $it\") }\n}"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Here the second collection starts a new countdown after the first finishes. The builder keeps no external mutable counter, so repeated collection has a clear meaning. Terminal operators express different demands: first returns after one matching value, take bounds a stream, and toList needs completion. An unbounded stream cannot produce a final complete list. Cancellation normally travels from the collecting coroutine into cooperative upstream work; a flow is not an independent lifetime owner."
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "Kotlin Flow API",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-flow/",
+          "description": "Cold and hot implementations, sequential processing, and context preservation."
+        },
+        {
+          "title": "Kotlin flows guide",
+          "url": "https://kotlinlang.org/docs/coroutines-flow.html",
+          "description": "Flow builders, terminal operations, cancellation, and execution contexts."
+        }
+      ]
+    },
+    {
+      "id": "coroutines-22",
+      "title": "Flow transformations and failure boundaries",
+      "summary": "Choose operators by their ordering, cancellation, and recovery behavior.",
+      "stage": "STREAMS AND STATE",
+      "group": "STREAMS AND STATE",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Intermediate operators describe a processing pipeline. map transforms each value, filter selects values, and onEach adds an action without replacing the value. These operators preserve sequential processing unless an operator introduces concurrency. Their order changes the contract: filtering before an expensive transformation avoids work, while filtering afterward can inspect the transformed result. A pipeline should make this ordering apparent to its readers."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "zip pairs corresponding emissions and is useful when position matters. combine waits for each source to produce a value, then computes from their latest values as sources update. It is useful for derived screen state, but it does not create an atomic transaction across independent sources. collectLatest cancels the previous collector action when a new value arrives. It suits replaceable rendering or searches; cancellation must be cooperative, and an already committed external side effect cannot be undone by cancellation."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "code": "import java.io.IOException\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.flow.catch\nimport kotlinx.coroutines.flow.collect\nimport kotlinx.coroutines.flow.flow\nimport kotlinx.coroutines.flow.map\n\nfun main() = runBlocking {\n    flow {\n        emit(10)\n        throw IOException(\"Sensor unavailable\")\n    }\n        .map { \"Reading: $it\" }\n        .catch { cause ->\n            if (cause !is IOException) throw cause\n            emit(\"Reading unavailable\")\n        }\n        .collect { println(it) }\n}"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "catch handles failures upstream of its position. The example can replace a producer or map failure with a fallback string, but a failure in the collector remains outside that boundary. catch is transparent to cancellation exceptions used to cancel collection. retry or retryWhen restarts upstream collection; it does not resume at the failed emit. A retry policy therefore needs bounded attempts, an appropriate delay, and awareness that earlier operations may repeat. Recovery values should describe meaningful application states rather than silently hide programming errors."
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "Flow catch",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/catch.html",
+          "description": "Upstream exception transparency, fallback values, and cancellation."
+        },
+        {
+          "title": "Kotlin flows guide",
+          "url": "https://kotlinlang.org/docs/coroutines-flow.html",
+          "description": "Transformation, combination, and latest-value operators."
+        }
+      ]
+    },
+    {
+      "id": "coroutines-23",
+      "title": "StateFlow: observable current state",
+      "summary": "Model a current value while treating history and producer lifetime separately.",
+      "stage": "STREAMS AND STATE",
+      "group": "STREAMS AND STATE",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "StateFlow exposes a current value and gives a new subscriber the latest available state. It always has an initial value and never completes normally. Updating MutableStateFlow does not require a collector. Its value is a snapshot, so it is useful for a current selection, loading status, or immutable screen model. A read-only StateFlow prevents callers from directly assigning through that interface; the owner retains the mutable reference."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Equality determines whether a new value is distinguishable. Assigning an equal value does not notify collectors, and a slow collector can skip intermediate changes. StateFlow therefore describes current state rather than a complete transition history. Immutable data classes and replacement values make changes visible; mutating a list inside an existing state object can defeat equality-based observation. update performs an atomic read-modify-write, but its lambda may run repeatedly under contention and should have no external side effects."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "code": "import kotlinx.coroutines.flow.MutableStateFlow\nimport kotlinx.coroutines.flow.StateFlow\nimport kotlinx.coroutines.flow.asStateFlow\nimport kotlinx.coroutines.flow.update\n\ndata class BasketState(val itemCount: Int = 0)\n\nclass Basket {\n    private val mutable = MutableStateFlow(BasketState())\n    val state: StateFlow<BasketState> = mutable.asStateFlow()\n\n    fun addItem() {\n        mutable.update { previous ->\n            previous.copy(itemCount = previous.itemCount + 1)\n        }\n    }\n}"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "stateIn converts an upstream flow into shared state with a single upstream collection. Its scope owns the sharing work, while its SharingStarted policy controls when that work runs. WhileSubscribed can stop upstream after subscribers disappear and later restart it. By default the cached value remains available; stopping collection is not the same as erasing state. A StateFlow object remains reachable according to ordinary reference lifetime, even after its producer scope has been cancelled."
+            }
+          ]
+        },
+        {
+          "type": "checkpoint",
+          "prompt": "Does StateFlow deliver every state update to each collector?",
+          "runs": [
+            {
+              "text": "No. StateFlow represents the current state. Equality-based conflation suppresses equal values, and a slow collector can skip intermediate values. It is suitable when rendering the latest state; a requirement to process every event needs a different delivery and retention design."
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "StateFlow API",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-state-flow/",
+          "description": "Current values, equality-based conflation, and immutable state observation."
+        },
+        {
+          "title": "Atomic StateFlow update",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/update.html",
+          "description": "Atomic updates and repeated evaluation of the update function."
+        },
+        {
+          "title": "stateIn",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/state-in.html",
+          "description": "The sharing scope and upstream collection lifecycle."
+        },
+        {
+          "title": "WhileSubscribed",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-sharing-started/-companion/-while-subscribed.html",
+          "description": "Stop timeout and replay expiration are separate policies."
+        }
+      ]
+    },
+    {
+      "id": "coroutines-24",
+      "title": "SharedFlow: broadcast and retention",
+      "summary": "Specify replay, subscriber lag, and loss before choosing an event stream.",
+      "stage": "STREAMS AND STATE",
+      "group": "STREAMS AND STATE",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "SharedFlow broadcasts values to active subscribers and has no required initial value. It is hot: subscribers observe a shared instance rather than each starting a producer. Its replay parameter controls how many recent values a new subscriber receives. Replay is retained history, not an acknowledgement protocol. Replaying a navigation request or payment notification can repeat an action unless the consumer’s contract explicitly handles repeated values."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "extraBufferCapacity allows existing slow subscribers to lag behind a producer. When that buffer fills, SUSPEND applies backpressure, DROP_OLDEST sacrifices older buffered values, and DROP_LATEST sacrifices the incoming value. These settings express acceptable loss under load. They do not create durable storage, and subscriber cancellation can still interrupt handling after receipt. A requirement for confirmed processing needs an explicit acknowledgement or persistent domain record."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "code": "import kotlinx.coroutines.flow.MutableSharedFlow\nimport kotlinx.coroutines.flow.SharedFlow\nimport kotlinx.coroutines.flow.asSharedFlow\n\ndata class Telemetry(val temperature: Int)\n\nclass TelemetryBus {\n    private val mutable = MutableSharedFlow<Telemetry>(\n        replay = 1,\n        extraBufferCapacity = 2\n    )\n    val readings: SharedFlow<Telemetry> = mutable.asSharedFlow()\n\n    suspend fun publish(reading: Telemetry) {\n        mutable.emit(reading)\n    }\n}"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "With no subscribers, only replay values are retained; extra buffer capacity is unused and emit does not wait for a future listener. A default MutableSharedFlow() has neither replay nor additional buffering, so a no-subscriber emission is lost immediately. Its tryEmit can return true in that case even though nobody received the value. Successful emission means the configured stream operation succeeded, not that application handling completed. shareIn provides a scope-owned broadcast of a cold upstream; retention and upstream start policy still need separate decisions."
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "SharedFlow API",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-shared-flow/",
+          "description": "Replay, buffering, no-subscriber behavior, and broadcast delivery."
+        },
+        {
+          "title": "Android StateFlow and SharedFlow",
+          "url": "https://developer.android.com/kotlin/flow/stateflow-and-sharedflow",
+          "description": "Sharing cold producers and choosing an external sharing scope."
+        }
+      ]
+    },
+    {
+      "id": "coroutines-25",
+      "title": "ViewModel loading and stale results",
+      "summary": "Own requests in the screen model and make replacement behavior explicit.",
+      "stage": "ANDROID LIFETIME",
+      "group": "ANDROID LIFETIME",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "A ViewModel can own work whose result belongs to a screen model across configuration changes. The default viewModelScope uses Main.immediate and supervised children, and is cancelled when that ViewModel is cleared. A ViewModel constructed with a custom scope needs that scope’s execution and failure policy considered explicitly. The ViewModel should expose immutable UI state and accept user actions; a view subscribes and renders. A request that must survive this owner needs a different explicitly managed lifetime. Launching in a broader scope merely to avoid cancellation changes the product behavior and resource ownership."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "A suspend declaration does not make blocking I/O safe on the main thread. In this Android example, CatalogRepository.load is a main-safe, cancellation-cooperative API supplied by the project. A blocking implementation moves its blocking operation to an injected dispatcher with withContext. refresh is called on Main, so request IDs, job replacement, and state publication are confined to the same thread."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "code": "import androidx.lifecycle.ViewModel\nimport androidx.lifecycle.viewModelScope\nimport java.io.IOException\nimport kotlinx.coroutines.CancellationException\nimport kotlinx.coroutines.Job\nimport kotlinx.coroutines.currentCoroutineContext\nimport kotlinx.coroutines.ensureActive\nimport kotlinx.coroutines.flow.MutableStateFlow\nimport kotlinx.coroutines.flow.asStateFlow\nimport kotlinx.coroutines.launch\n\ninterface CatalogRepository {\n    suspend fun load(query: String): List<String>\n}\n\nsealed interface CatalogState {\n    data object Idle : CatalogState\n    data object Loading : CatalogState\n    data class Ready(val items: List<String>) : CatalogState\n    data object Unavailable : CatalogState\n}\n\nclass CatalogViewModel(private val repository: CatalogRepository) : ViewModel() {\n    private val mutable = MutableStateFlow<CatalogState>(CatalogState.Idle)\n    val state = mutable.asStateFlow()\n    private var request: Job? = null\n    private var generation = 0L\n\n    fun refresh(query: String) {\n        val id = ++generation\n        request?.cancel()\n        request = viewModelScope.launch {\n            mutable.value = CatalogState.Loading\n            try {\n                val items = repository.load(query)\n                currentCoroutineContext().ensureActive()\n                if (id == generation) mutable.value = CatalogState.Ready(items)\n            } catch (cancelled: CancellationException) {\n                throw cancelled\n            } catch (unavailable: IOException) {\n                currentCoroutineContext().ensureActive()\n                if (id == generation) mutable.value = CatalogState.Unavailable\n            }\n        }\n    }\n}"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Cancellation asks obsolete work to stop; it cannot undo a completed remote action. The active-job check and generation comparison guard publication, including an ordinary exception returned after an obsolete request was cancelled. Handling IOException describes an expected failure while allowing programming faults to surface. A latest-request policy also needs an error-path guard: protecting only successful results still permits an old failure to replace a newer success. This design assumes main-confined entry points; concurrent callers would require serialization or synchronization."
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "Android coroutine best practices",
+          "url": "https://developer.android.com/kotlin/coroutines/coroutines-best-practices",
+          "description": "Main-safe repository APIs, dispatcher injection, cancellation, and ViewModel ownership."
+        },
+        {
+          "title": "withContext",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html",
+          "description": "Context changes and cancellable return to the caller."
+        },
+        {
+          "title": "ViewModel scoping APIs",
+          "url": "https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-apis",
+          "description": "The selected ViewModelStoreOwner determines the screen model lifetime."
+        },
+        {
+          "title": "Lifecycle-aware coroutine scopes",
+          "url": "https://developer.android.com/topic/libraries/architecture/coroutines",
+          "description": "Default ViewModel ownership and the option to inject a custom scope."
+        }
+      ]
+    },
+    {
+      "id": "coroutines-26",
+      "title": "Lifecycle-aware collection in Views and Compose",
+      "summary": "Coordinate rendering subscriptions with visibility and upstream sharing.",
+      "stage": "ANDROID LIFETIME",
+      "group": "ANDROID LIFETIME",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "A screen model’s lifetime and a rendered view’s lifetime differ. A Fragment can retain its ViewModel while destroying and recreating its view. In a Views screen, collection that touches view bindings belongs to viewLifecycleOwner. repeatOnLifecycle starts a new child block when the owner reaches the chosen state, cancels that block below the state, and can restart it later. The outer lifecycleScope remains responsible for coordinating these transitions."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "The following Android helpers assume Lifecycle runtime, Lifecycle Compose, Compose runtime, and Material 3 APIs are available in the project. bindStatus is called once for the current Fragment view, with viewLifecycleOwner and a render callback bound to that view. StatusText receives the same StateFlow in a Compose screen. The examples define their own parameter contracts and do not require a particular ViewModel class."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "code": "import androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.lifecycle.Lifecycle\nimport androidx.lifecycle.LifecycleOwner\nimport androidx.lifecycle.compose.collectAsStateWithLifecycle\nimport androidx.lifecycle.lifecycleScope\nimport androidx.lifecycle.repeatOnLifecycle\nimport kotlinx.coroutines.flow.StateFlow\nimport kotlinx.coroutines.flow.collect\nimport kotlinx.coroutines.launch\n\nfun bindStatus(\n    owner: LifecycleOwner,\n    status: StateFlow<String>,\n    render: (String) -> Unit\n) {\n    owner.lifecycleScope.launch {\n        owner.repeatOnLifecycle(Lifecycle.State.STARTED) {\n            status.collect { render(it) }\n        }\n    }\n}\n\n@Composable\nfun StatusText(status: StateFlow<String>) {\n    val text by status.collectAsStateWithLifecycle()\n    Text(text)\n}"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "For multiple independently collected streams inside repeatOnLifecycle, sibling launch blocks allow both collectors to run; consecutive collect calls would leave the second waiting behind the first. Compose’s collectAsStateWithLifecycle exposes State suitable for recomposition and normally collects at STARTED or above. Pausing a subscription does not necessarily stop the producer. A stateIn upstream using WhileSubscribed responds to subscriber counts and its stop timeout; Eagerly can continue without this screen. Re-entry may restart a cold producer, so repeated subscriptions should have deliberate resource cleanup and side-effect behavior."
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "Lifecycle collection with StateFlow",
+          "url": "https://developer.android.com/kotlin/flow/stateflow-and-sharedflow",
+          "description": "repeatOnLifecycle and separation of producer and UI collection."
+        },
+        {
+          "title": "State and Jetpack Compose",
+          "url": "https://developer.android.com/develop/ui/compose/state",
+          "description": "collectAsStateWithLifecycle and lifecycle-aware conversion to Compose State."
+        },
+        {
+          "title": "WhileSubscribed",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-sharing-started/-companion/-while-subscribed.html",
+          "description": "Subscriber changes control upstream work independently of cached state."
+        }
+      ]
+    },
+    {
+      "id": "coroutines-27",
+      "title": "Coroutine tests and virtual time",
+      "summary": "Understand scheduling control and the limits of a single test clock.",
+      "stage": "TESTING",
+      "group": "TESTING",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "runTest provides a test coroutine and a TestCoroutineScheduler. Delays scheduled on its test dispatchers use virtual time rather than waiting for the corresponding wall-clock duration. This supports precise assertions about a pending operation, a timeout, or a delayed transition. It does not make Thread.sleep virtual, and work on real IO or Default dispatchers can still take real time. Dispatcher injection brings the relevant scheduling decisions under test control."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "StandardTestDispatcher queues newly launched coroutines rather than immediately entering their bodies. runCurrent processes work ready at the current virtual instant. advanceTimeBy moves the clock while processing tasks before the target instant; work exactly at the target remains pending until runCurrent or another advancement executes it. advanceUntilIdle processes queued work until the relevant scheduler is idle, which is useful for final outcomes but can skip intermediate states of interest."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "code": "import kotlinx.coroutines.ExperimentalCoroutinesApi\nimport kotlinx.coroutines.delay\nimport kotlinx.coroutines.launch\nimport kotlinx.coroutines.test.StandardTestDispatcher\nimport kotlinx.coroutines.test.advanceTimeBy\nimport kotlinx.coroutines.test.runCurrent\nimport kotlinx.coroutines.test.runTest\nimport kotlin.test.Test\nimport kotlin.test.assertFalse\nimport kotlin.test.assertTrue\n\n@OptIn(ExperimentalCoroutinesApi::class)\nclass VirtualTimeTest {\n    @Test\n    fun completesAtTheBoundary() = runTest {\n        val worker = StandardTestDispatcher(testScheduler)\n        var complete = false\n        launch(worker) {\n            delay(1000)\n            complete = true\n        }\n        runCurrent()\n        advanceTimeBy(1000)\n        assertFalse(complete)\n        runCurrent()\n        assertTrue(complete)\n    }\n}"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Every test dispatcher participating in one scenario should share the same scheduler, as worker does here. Creating unrelated schedulers creates unrelated clocks and undermines assertions about relative ordering. runTest also expects owned child work to terminate. A deliberately persistent collector belongs in backgroundScope, which is cancelled when the test ends, or needs explicit cancellation and joining. Virtual-time tests explain controlled interleavings; they do not by themselves establish safety under production multithreaded contention."
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "runTest",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/kotlinx.coroutines.test/run-test.html",
+          "description": "Virtual time, child coroutine completion, and real dispatcher limits."
+        },
+        {
+          "title": "StandardTestDispatcher",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/kotlinx.coroutines.test/-standard-test-dispatcher.html",
+          "description": "Queued starts and explicit scheduler control."
+        },
+        {
+          "title": "advanceTimeBy",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/kotlinx.coroutines.test/-test-coroutine-scheduler/advance-time-by.html",
+          "description": "Target-boundary scheduling semantics."
+        },
+        {
+          "title": "TestScope backgroundScope",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/kotlinx.coroutines.test/-test-scope/background-scope.html",
+          "description": "Automatic cancellation for persistent background work."
+        }
+      ]
+    },
+    {
+      "id": "coroutines-28",
+      "title": "Testing failure and cancellation policies",
+      "summary": "Observe ownership and outcomes at the boundary where a failure is handled.",
+      "stage": "TESTING",
+      "group": "TESTING",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "A failure-policy test describes the relationship among child work, the combined result, and the caller. With coroutineScope, an ordinary child failure fails the group and cancels siblings. A test of that policy needs an observation that the sibling started and later cleaned up, as well as an assertion about the failure returned to the caller. A final error alone cannot distinguish correct cancellation from a child that was never started."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "supervisorScope isolates a child’s failure from sibling cancellation, but it does not automatically produce partial success. An exception thrown by await and allowed to escape the supervisor block fails that block and cancels its remaining children. An independent-results policy needs per-child handling or outcome values at the appropriate boundary. A cancellation exception should remain cancellation rather than becoming an ordinary failed outcome, so the caller retains control of the whole request."
+            }
+          ]
+        },
         {
           "type": "table",
           "headers": [
-            "Dispatcher",
-            "Use"
+            "Policy",
+            "Useful observation",
+            "Common false conclusion"
           ],
           "rows": [
             [
-              "Main",
-              "Android UI interaction and lightweight coordination."
+              "All results required",
+              "Expected error plus sibling finally marker",
+              "Catching await always prevents sibling cancellation"
             ],
             [
-              "Default",
-              "CPU-heavy parsing, sorting, image or data processing."
+              "Independent results",
+              "Successful sibling plus explicit failed outcome",
+              "Supervision automatically handles every exception"
             ],
             [
-              "IO",
-              "Blocking file, socket, database, or other I/O calls."
+              "Caller cancellation",
+              "Cancelled parent and child cleanup completion",
+              "An error value proves cancellation propagated"
             ],
             [
-              "Unconfined",
-              "Advanced execution behavior; not a default UI/background strategy."
+              "Latest request wins",
+              "Old success and old ordinary failure cannot publish",
+              "Testing only the newest success covers stale errors"
             ]
           ]
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "A dispatcher controls scheduling, not success policy. Suspend APIs that already avoid blocking may not need an IO wrapper. Synchronous calls still block even inside a suspend function. Put dispatcher decisions in the class performing the blocking or CPU work so callers can safely invoke it from Main. Inject dispatchers for tests. [16, 21]"
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "import java.io.File\n\nclass TextRepository(\n    private val io: CoroutineDispatcher = Dispatchers.IO\n) {\n    suspend fun read(file: File): String = withContext(io) {\n        file.readText() // Synchronous blocking I/O.\n    }\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "The caller suspends while read executes on IO, then resumes in its original context. withContext does not guarantee a thread switch when the requested dispatcher is already the current one. It also does not make File.readText instantly cancellable midway through the call."
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "suspend fun pauseBlockingLibrary(): Unit =\n    runInterruptible(Dispatchers.IO) {\n        Thread.sleep(100) // This API supports interruption.\n    }"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Use runInterruptible for blocking JVM APIs that honor thread interruption. For APIs that do not, use their cancellation mechanisms or accept the bounded blocking behavior. Do not infer interruptibility merely from withContext(IO). [6]"
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 10",
-          "runs": [
-            {
-              "text": "Log thread names before, inside, and after withContext. Treat names as diagnostics rather than fixed assertions. Identify which operations in your real repository are blocking, CPU-heavy, or already suspending."
+              "text": "CompletableDeferred signals can mark that a fake dependency entered a particular phase. Waiting for such a signal expresses causality more clearly than guessing a delay. Cancellation tests can await entry, cancel the owner, join the job, and inspect a cleanup signal. These observations distinguish requested cancellation from completed cleanup. Test fakes should preserve the dependency contract: cooperative cancellation is the normal case, while a separate adversarial fake can illustrate a delayed ordinary failure. Unhandled child failures should remain visible to the test runner rather than be discarded by a global handler."
             }
           ]
         }
       ],
-      "group": "DISPATCHERS AND RESULT POLICIES",
-      "referenceNumbers": [
-        6,
-        12,
-        16,
-        21
+      "sources": [
+        {
+          "title": "coroutineScope",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html",
+          "description": "Grouped failure, cancellation, and completion of children."
+        },
+        {
+          "title": "supervisorScope",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/supervisor-scope.html",
+          "description": "Child isolation and failure of the supervisor block."
+        },
+        {
+          "title": "Testing coroutines on Android",
+          "url": "https://developer.android.com/kotlin/coroutines/test",
+          "description": "Controllable dispatchers and deterministic observations."
+        }
       ]
     },
     {
-      "id": "coroutines-18",
-      "title": "async vs withContext",
-      "summary": "Start concurrent values only when concurrency is useful",
-      "stage": "WEEK 3",
-      "sourcePage": 18,
+      "id": "coroutines-37",
+      "title": "Testing Flow and shared state streams",
+      "summary": "Match assertions to finite sequences, current values, and subscription policies.",
+      "stage": "TESTING",
+      "group": "TESTING",
       "blocks": [
         {
-          "type": "code",
-          "code": "suspend fun sequentialValues(): Pair<String, String> {\n    val p = withContext(Dispatchers.Default) { fetchProfile() }\n    val o = withContext(Dispatchers.Default) {\n        delay(50)\n        \"orders\"\n    }\n    return p to o\n}\nsuspend fun concurrentValues(): Pair<String, String> =\n    coroutineScope {\n        val p = async { fetchProfile() }\n        val o = async { delay(50); \"orders\" }\n        p.await() to o.await()\n    }"
-        },
-        {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "The first function starts its orders work after profile completes: about 150 ms of simulated waiting. The second starts both before awaiting: about 100 ms. Awaiting p then o does not make those computations sequential; both were already started. [17]"
+              "text": "A flow test depends on the stream’s public promise. A finite cold flow can be collected into a list when completion is part of its contract. first can verify one value without waiting for completion, and take can bound a sequence. A stream intended to remain active should not be passed to an unbounded toList and expected to finish. Tests that consume a fixed number of values also need to ensure that the producer actually emits that many."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "withContext expresses “do this work in this context and return its result.” async expresses “start this child computation and give me a handle to a future value.” async(IO) followed immediately by await is usually less direct than withContext(IO) when there is no useful overlapping work."
+              "text": "For state holders, the current value is often the stable assertion. An exact list of every intermediate StateFlow assignment is usually stronger than the API promises because conflation can skip transitions. A WhileSubscribed stateIn adds another condition: merely reading value does not start its upstream. A live subscriber is necessary even when the test’s final assertion inspects only the current value."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "code": "import kotlinx.coroutines.ExperimentalCoroutinesApi\nimport kotlinx.coroutines.flow.MutableStateFlow\nimport kotlinx.coroutines.flow.SharingStarted\nimport kotlinx.coroutines.flow.collect\nimport kotlinx.coroutines.flow.map\nimport kotlinx.coroutines.flow.stateIn\nimport kotlinx.coroutines.launch\nimport kotlinx.coroutines.test.runCurrent\nimport kotlinx.coroutines.test.runTest\nimport kotlin.test.Test\nimport kotlin.test.assertEquals\n\n@OptIn(ExperimentalCoroutinesApi::class)\nclass DerivedStateTest {\n    @Test\n    fun latestValueReflectsAnActiveUpstream() = runTest {\n        val source = MutableStateFlow(0)\n        val doubled = source.map { it * 2 }.stateIn(\n            backgroundScope,\n            SharingStarted.WhileSubscribed(),\n            0\n        )\n        backgroundScope.launch { doubled.collect {} }\n        runCurrent()\n        source.value = 7\n        runCurrent()\n        assertEquals(14, doubled.value)\n    }\n}"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Both the sharing job and the collector above belong to backgroundScope so their intentionally persistent work is cancelled after the assertion. runCurrent establishes the subscriber before the source changes. For SharedFlow, replay tests can emit before subscription and inspect the retained values; active-delivery tests must first establish a collector. Those are different contracts. Extra buffer capacity is not evidence of offline retention, and a successful tryEmit is not evidence that a listener handled the item. A targeted stream test identifies which of these guarantees it is observing."
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "Testing Kotlin flows on Android",
+          "url": "https://developer.android.com/kotlin/flow/test",
+          "description": "Finite assertions, continuous collection, and stateIn subscribers."
+        },
+        {
+          "title": "TestScope backgroundScope",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/kotlinx.coroutines.test/-test-scope/background-scope.html",
+          "description": "Persistent collectors and sharing jobs are cancelled at test completion."
+        },
+        {
+          "title": "stateIn",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/state-in.html",
+          "description": "Shared upstream collection and initial state."
+        }
+      ]
+    },
+    {
+      "id": "coroutines-39",
+      "title": "Testing ViewModel coroutine behavior",
+      "summary": "Control Main and distinguish state transitions from owner lifecycle behavior.",
+      "stage": "TESTING",
+      "group": "TESTING",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "A local ViewModel test needs control over work launched on Main. Replacing Main with a test dispatcher before constructing the ViewModel ensures that initialization and the default viewModelScope use the intended scheduler. Other injected dispatchers should share that scheduler. Restoring Main after the scenario prevents the test’s global dispatcher replacement from affecting unrelated tests. Tests that mutate Main also need isolation from other tests that mutate the same global state."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "The Android example below assumes Lifecycle ViewModel and coroutine testing APIs are present. Its model and delayed operation are defined locally, so the assertion concerns observable state rather than a hidden repository fixture. StandardTestDispatcher permits an assertion before delayed completion, while advanceUntilIdle targets the eventual state. The finally blocks cancel the instance’s work and restore Main even if an assertion fails."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "code": "import androidx.lifecycle.ViewModel\nimport androidx.lifecycle.viewModelScope\nimport kotlinx.coroutines.Dispatchers\nimport kotlinx.coroutines.ExperimentalCoroutinesApi\nimport kotlinx.coroutines.cancel\nimport kotlinx.coroutines.delay\nimport kotlinx.coroutines.flow.MutableStateFlow\nimport kotlinx.coroutines.flow.asStateFlow\nimport kotlinx.coroutines.launch\nimport kotlinx.coroutines.test.StandardTestDispatcher\nimport kotlinx.coroutines.test.advanceUntilIdle\nimport kotlinx.coroutines.test.resetMain\nimport kotlinx.coroutines.test.runCurrent\nimport kotlinx.coroutines.test.runTest\nimport kotlinx.coroutines.test.setMain\nimport kotlin.test.Test\nimport kotlin.test.assertEquals\n\nclass CountViewModel : ViewModel() {\n    private val mutable = MutableStateFlow(0)\n    val count = mutable.asStateFlow()\n    fun refresh() {\n        viewModelScope.launch {\n            delay(100)\n            mutable.value = 1\n        }\n    }\n}\n\n@OptIn(ExperimentalCoroutinesApi::class)\nclass CountViewModelTest {\n    @Test\n    fun publishesAfterLoading() {\n        val main = StandardTestDispatcher()\n        Dispatchers.setMain(main)\n        try {\n            runTest(main) {\n                val model = CountViewModel()\n                try {\n                    model.refresh()\n                    runCurrent()\n                    assertEquals(0, model.count.value)\n                    advanceUntilIdle()\n                    assertEquals(1, model.count.value)\n                } finally {\n                    model.viewModelScope.cancel()\n                }\n            }\n        } finally {\n            Dispatchers.resetMain()\n        }\n    }\n}"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Cancelling viewModelScope explicitly is cleanup for this state test; it does not demonstrate Android clearing behavior. Clearing a ViewModelStore, destroying a Fragment view, and recreating an Activity are distinct events. A lifecycle-focused test should drive the relevant owner and observe subscription or cancellation changes at that boundary. A retained ViewModel commonly survives configuration changes, so asserting that every Activity destruction cancels its request encodes the wrong lifetime. Replacement-request tests also need an old failing request alongside the new successful one to expose stale error publication."
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "Testing coroutines on Android",
+          "url": "https://developer.android.com/kotlin/coroutines/test",
+          "description": "Main replacement before construction, scheduler sharing, and cleanup."
+        },
+        {
+          "title": "ViewModel scoping APIs",
+          "url": "https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-apis",
+          "description": "ViewModelStoreOwner scope and retained screen model lifetime."
+        }
+      ]
+    },
+    {
+      "id": "coroutines-34",
+      "title": "Coroutine decisions and glossary",
+      "summary": "A compact reference organized around ownership, results, and stream semantics.",
+      "stage": "DECISIONS AND REFERENCE",
+      "group": "DECISIONS AND REFERENCE",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "A coroutine decision begins with the lifetime of the operation. A suspend function normally serves its caller; a launched coroutine belongs to the scope used to launch it. Scope selection therefore answers who can cancel the operation and how long its side effects remain relevant. Dispatcher selection answers where execution is scheduled. These are separate decisions: moving work to IO does not make it survive its owner."
             }
           ]
         },
@@ -1408,2482 +1861,184 @@ window.PRIMERS.push({
           "type": "table",
           "headers": [
             "Need",
-            "Choose"
+            "Common API",
+            "Contract to preserve"
           ],
           "rows": [
             [
-              "One result, move CPU or blocking work",
-              "withContext with an appropriate dispatcher"
+              "One sequential result in another context",
+              "withContext",
+              "Caller waits; lifetime remains structured"
             ],
             [
-              "Two required independent computations",
-              "coroutineScope + async for both, then await"
+              "Concurrent result needed later",
+              "async inside an owned scope",
+              "Deferred must have a result and failure policy"
             ],
             [
-              "Two useful independent partial results",
-              "supervisorScope + explicit per-result error policy"
+              "Child work as one required result",
+              "coroutineScope",
+              "Ordinary child failure cancels the group"
             ],
             [
-              "Operation triggered by a UI action",
-              "launch in the owning UI/ViewModel scope"
-            ]
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 11",
-          "runs": [
-            {
-              "text": "First use successful orders so timing is understandable. Then restore its failure. Explain why replacing coroutineScope with supervisorScope changes failure isolation but does not fix an exception escaping the block."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Concurrency has costs: more requests in flight, more lifecycle edges, and more complicated error handling. Use it when overlap benefits the operation, not because every suspend call needs its own async."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": true,
-          "runs": [
-            {
-              "text": "Official reading: [11] async; [12] withContext; [17] Composition. Sources are linked on pages 41-42."
-            }
-          ]
-        }
-      ],
-      "group": "DISPATCHERS AND RESULT POLICIES",
-      "referenceNumbers": [
-        11,
-        12,
-        17
-      ]
-    },
-    {
-      "id": "coroutines-19",
-      "title": "Model errors intentionally",
-      "summary": "Preserve successful values without erasing failure details",
-      "stage": "WEEK 3",
-      "sourcePage": 19,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "A nullable orders value cannot tell you whether the user has no orders or the request failed. Result<T> carries a value or a Throwable. A sealed domain type can instead distinguish success, offline, unauthorized, or unavailable. Select a model that lets the UI make the required decision."
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "suspend fun <T> attempt(\n    block: suspend () -> T\n): Result<T> = try {\n    Result.success(block())\n} catch (e: CancellationException) {\n    throw e\n} catch (e: Exception) {\n    Result.failure(e)\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "This helper is a teaching boundary for recoverable Exception failures. Cancellation is rethrown and serious Error subclasses are not swallowed. In production, narrow expected failures when possible; a programming defect should not automatically become an ordinary “offline” UI state. [21, 24]"
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "sealed interface OrdersOutcome {\n    data class Ready(val value: String) : OrdersOutcome\n    data object Unavailable : OrdersOutcome\n}\n// Map expected transport/service failures at the data boundary.\n// Keep diagnostic causes in Result or logging when needed."
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "runCatching catches every Throwable, including CancellationException. It is convenient for synchronous computations, but using it unmodified around suspend work can turn cancellation into a normal Result.failure. It does not create supervision or repair an already cancelled Job. [24]"
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 12",
-          "runs": [
-            {
-              "text": "Represent an empty successful orders list separately from a failed request. Add a retryable flag or domain error only if the caller uses it. Cancel attempt { fetchProfile() } and verify that cancellation escapes instead of returning a failure result."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "A child that catches and converts an expected failure before it escapes can finish normally, even under coroutineScope. Supervision is most useful when child failure itself is allowed. Neither policy should consume the caller’s cancellation."
-            }
-          ]
-        }
-      ],
-      "group": "DISPATCHERS AND RESULT POLICIES",
-      "referenceNumbers": [
-        21,
-        24
-      ]
-    },
-    {
-      "id": "coroutines-20",
-      "title": "Complete partial-success loader",
-      "summary": "The profile survives an orders failure, with both outcomes retained",
-      "stage": "WEEK 3",
-      "sourcePage": 20,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "This complete main uses the fixtures on page 3 and attempt on page 19. Both children start before either await. Expected exceptions are modeled inside each computation, and the supervisor documents the independence of the two requests."
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "data class Dashboard(\n    val profile: Result<String>,\n    val orders: Result<String>\n)\n\nsuspend fun loadDashboard(): Dashboard = supervisorScope {\n    val profile = async { attempt { fetchProfile() } }\n    val orders = async { attempt { fetchOrders() } }\n    Dashboard(profile.await(), orders.await())\n}\n\nfun main() = runBlocking {\n    val result = loadDashboard()\n    println(\"profile: ${result.profile.getOrNull()}\")\n    result.orders.fold(\n        onSuccess = { println(\"orders: $it\") },\n        onFailure = {\n            println(\"orders unavailable: ${it.message}\")\n        }\n    )\n    println(\"done\")\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Expected output is profile: profile, orders unavailable: Wrong orders, then done. For these expected exceptions, attempt prevents failed child Jobs by turning failures into values. That means coroutineScope would also work in this particular implementation. supervisorScope additionally protects sibling work from an unmodeled child failure until that failure is observed or escapes the block."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Policy boundaries matter",
-          "runs": [
-            {
-              "text": "If an unexpected exception escapes a child and later its await escapes the supervisor block, the operation fails and remaining children stop. Result modeling is not a promise to survive every possible defect. The owner can always cancel both requests."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "Exercise 13: make the policy observable"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Run four cases: both succeed, only orders fails, only profile fails, both fail. For each, inspect both Results. Add a fifth case that cancels the caller at 20 ms; neither result should be rendered as ordinary success or failure. Keep the public function attached to the caller."
-            }
-          ]
-        }
-      ],
-      "group": "DISPATCHERS AND RESULT POLICIES",
-      "referenceNumbers": [
-        8,
-        21,
-        24
-      ]
-    },
-    {
-      "id": "coroutines-21",
-      "title": "Flow: a sequence over time",
-      "summary": "Use a stream when one final return value is not enough",
-      "stage": "WEEK 4",
-      "sourcePage": 21,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "A suspend function returns one result. Flow<T> can emit several values over time. The flow { } builder creates a cold stream: constructing it does not execute the producer; collecting it does. Each new collection runs that producer again. Some Flow implementations are hot; “Flow” alone does not imply cold. [18]"
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "import kotlinx.coroutines.flow.*\n\nfun profileUpdates(): Flow<String> = flow {\n    emit(\"loading\")\n    emit(fetchProfile())\n}\nfun main() = runBlocking {\n    val updates = profileUpdates() // No request yet.\n    updates.collect { println(\"first: $it\") }\n    updates.collect { println(\"second: $it\") }\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Each collection prints loading then profile; fetchProfile runs twice. collect is a terminal suspending operation. Intermediate operators such as map build a pipeline without running it. A basic flow pipeline processes upstream and downstream sequentially in the collector’s coroutine unless an operator introduces a boundary."
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "fun normalizedProfiles(): Flow<String> =\n    profileUpdates()\n        .filter { it != \"loading\" }\n        .map { it.uppercase() }"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Cancelling the collecting coroutine stops this suspending producer. emit in flow is cancellation-aware. A CPU-heavy producer still needs cooperative work. Do not emit from a different dispatcher using withContext inside flow; use flowOn for upstream context, or a suitable builder such as channelFlow for concurrent producers."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 14",
-          "runs": [
-            {
-              "text": "Add a “fetch started” log. Create the Flow without collecting and count logs; then collect twice. Predict the number of requests. Decide whether your UI needs a fresh request for each subscriber or a shared source."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": true,
-          "runs": [
-            {
-              "text": "Official reading: [18] flow builder; [19] flowOn. Sources are linked on pages 41-42."
-            }
-          ]
-        }
-      ],
-      "group": "STREAMS AND STATE",
-      "referenceNumbers": [
-        18,
-        19
-      ]
-    },
-    {
-      "id": "coroutines-22",
-      "title": "Flow operators and errors",
-      "summary": "Place transformations and recovery at deliberate boundaries",
-      "stage": "WEEK 4",
-      "sourcePage": 22,
-      "blocks": [
-        {
-          "type": "code",
-          "code": "fun profileStream(): Flow<Result<String>> = flow {\n    emit(Result.success(fetchProfile()))\n}.catch { e ->\n    if (e is CancellationException) throw e\n    emit(Result.failure(e))\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "catch handles exceptions in the upstream pipeline. It does not handle exceptions thrown by the downstream collector or cancellation used to stop the stream. Moving catch changes which work it protects. Put UI rendering failures where they can be diagnosed instead of pretending they are network failures. [20]"
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "fun labels(): Flow<String> = flow {\n    emit(fetchProfile())\n}.map { it.uppercase() }\n .flowOn(Dispatchers.Default)"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "flowOn changes upstream execution context and leaves downstream collection in the caller’s context. Do not put a Job into flowOn’s context. Cross-dispatcher boundaries can buffer values; cancellation may mean an in-flight value is never delivered. [19]"
-            }
-          ]
-        },
-        {
-          "type": "table",
-          "headers": [
-            "Operator",
-            "Practical meaning"
-          ],
-          "rows": [
-            [
-              "buffer",
-              "Lets producer and consumer overlap with a queue."
+              "Independently useful child results",
+              "supervisorScope",
+              "Each failure still needs handling"
             ],
             [
-              "conflate",
-              "A slow consumer can skip intermediate values and see newer ones."
+              "Fresh sequence per collection",
+              "flow",
+              "Collection starts the builder again"
             ],
             [
-              "collectLatest",
-              "A new value cancels the previous collector action."
-            ],
-            [
-              "combine",
-              "After all sources emit, uses their latest values on updates."
-            ],
-            [
-              "zip",
-              "Pairs corresponding emissions from two sources."
-            ],
-            [
-              "retry / retryWhen",
-              "Recollect upstream on selected failures; use bounds and backoff."
-            ]
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 15",
-          "runs": [
-            {
-              "text": "Emit versions every 20 ms while rendering takes 80 ms. Compare collect, conflate, and collectLatest. Do not assert every intermediate value is seen in the latter two. For combine, delay the first orders emission and predict when a combined dashboard becomes available."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Retries restart upstream and can repeat side effects. Use bounded retries for transient failures and check idempotency. Model partial errors before combining sources if one failure must not terminate the dashboard. Operator reading: [27]."
-            }
-          ]
-        }
-      ],
-      "group": "STREAMS AND STATE",
-      "referenceNumbers": [
-        19,
-        20,
-        27
-      ]
-    },
-    {
-      "id": "coroutines-23",
-      "title": "StateFlow: the current state",
-      "summary": "A hot, observable value with an initial state",
-      "stage": "WEEK 4",
-      "sourcePage": 23,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "StateFlow always has a value and immediately gives a new collector its current state. It suppresses equal updates using equality and conflates changes: slow collectors may miss intermediate states. It does not complete normally or encode failure automatically. Represent loading and errors in your state type. [14]"
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "data class ScreenState(\n    val loading: Boolean = false,\n    val profile: String? = null,\n    val orders: String? = null,\n    val ordersError: String? = null,\n    val profileError: String? = null,\n    val generalError: String? = null\n)\nval mutableState = MutableStateFlow(ScreenState())\nval state: StateFlow<ScreenState> = mutableState.asStateFlow()\n\nfun showLoading() {\n    mutableState.update { it.copy(loading = true) }\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Expose the read-only StateFlow and keep mutation private. update performs an atomic transformation; its lambda may be evaluated more than once under contention, so avoid side effects inside it. Use immutable copies rather than mutating a list already stored in the state, which can hide a meaningful change behind equality."
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "// Inside a lifecycle-owned component with a scope:\nval sharedProfiles: StateFlow<String> = profileUpdates().stateIn(\n    scope = scope,\n    started = SharingStarted.WhileSubscribed(5_000),\n    initialValue = \"loading\"\n)"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "stateIn shares a cold upstream as state. The scope owns that sharing coroutine. WhileSubscribed starts upstream when subscribers appear and can stop it after the timeout. The timeout is a deliberate lifecycle policy, not a universal constant. Handle upstream failures before stateIn if the UI should receive an error state. [15]"
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 16",
-          "runs": [
-            {
-              "text": "Set the same state twice and observe equality suppression. Publish several states quickly and explain why a slow collector is allowed to skip some. Test the final state value when your requirement is current UI state, rather than forcing every intermediate emission."
-            }
-          ]
-        }
-      ],
-      "group": "STREAMS AND STATE",
-      "referenceNumbers": [
-        14,
-        15,
-        28
-      ]
-    },
-    {
-      "id": "coroutines-24",
-      "title": "SharedFlow: broadcast values",
-      "summary": "Configure replay and buffering around delivery requirements",
-      "stage": "WEEK 4",
-      "sourcePage": 24,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "SharedFlow broadcasts to active collectors and can replay recent values to new collectors. It has no required initial value. It never completes normally, so collectors usually need cancellation or operators such as take. Replay, buffer capacity, and overflow policy determine what can be retained or dropped. [23]"
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "sealed interface UiEvent {\n    data class Message(val text: String) : UiEvent\n}\nprivate val mutableEvents = MutableSharedFlow<UiEvent>(\n    replay = 0,\n    extraBufferCapacity = 1\n)\nval events: SharedFlow<UiEvent> = mutableEvents.asSharedFlow()\n\nsuspend fun notifyOrdersUnavailable() {\n    mutableEvents.emit(UiEvent.Message(\"Orders unavailable\"))\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "This is an ephemeral notification policy. With replay = 0, an event emitted when there are no subscribers is not kept for a future subscriber; extraBufferCapacity does not provide offline storage. tryEmit returning true is not proof that a UI collector received the event. With replay > 0, a recreated collector may receive an old event again."
-            }
-          ]
-        },
-        {
-          "type": "table",
-          "headers": [
-            "Type",
-            "Best fit",
-            "Important limit"
-          ],
-          "rows": [
-            [
-              "Cold Flow",
-              "A request or computation per collection",
-              "Two collectors may repeat the work."
-            ],
-            [
+              "Observable current state",
               "StateFlow",
-              "The latest durable-in-memory UI state",
-              "Intermediate values may be skipped."
+              "Initial value and equality-based conflation"
             ],
             [
+              "Broadcast with chosen retention",
               "SharedFlow",
-              "Broadcast updates or ephemeral signals",
-              "Delivery depends on subscribers and configuration."
+              "Replay and delivery loss must be acceptable"
             ]
           ]
         },
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "If a payment result or essential navigation decision must survive a collector absence, store a pending state or durable record with acknowledgment rather than assuming a broadcast gives exactly-once delivery. None of these types survives process death by itself."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 17",
-          "runs": [
-            {
-              "text": "Emit one event before subscribing and one after. Repeat with replay = 1. Explain both outcomes and choose a policy for an optional snackbar versus an essential confirmation. Cancel your collectors when the exercise ends."
+              "text": "A Job represents lifecycle and cancellation rather than a computed value. Deferred adds a result obtained through await. A CoroutineScope supplies a context for launching children; CoroutineContext is the set of elements, such as a Job and dispatcher, that guide execution. A suspension point allows a coroutine to pause without requiring its thread to wait for the entire operation. Blocking occupies the executing thread until the call returns."
             }
           ]
         },
         {
           "type": "paragraph",
-          "small": true,
           "runs": [
             {
-              "text": "Official reading: [23] SharedFlow; [15] Android state and sharing. Sources are linked on pages 41-42."
+              "text": "Structured concurrency keeps child lifetimes within an explicit owner or suspending operation. Cancellation is cooperative: suspending operations and explicit checks provide opportunities to stop. Conflation retains a useful latest value while allowing intermediate values to be skipped. Backpressure slows production when consumers cannot keep up. Replay supplies retained values to a newly attached subscriber. Main-safe means an API can be called on Main without performing long blocking work there; it does not mean that all work stays on Main. These terms describe observable contracts, not performance guarantees."
             }
           ]
         }
       ],
-      "group": "STREAMS AND STATE",
-      "referenceNumbers": [
-        15,
-        23
-      ]
-    },
-    {
-      "id": "coroutines-25",
-      "title": "Android: a ViewModel owns loading",
-      "summary": "Expose state; keep the request attached to the screen model",
-      "stage": "WEEK 4",
-      "sourcePage": 25,
-      "blocks": [
+      "sources": [
         {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "viewModelScope is cancelled when its ViewModel is cleared. Its top-level children are supervised, but children inside one launch still have that launch as an ordinary parent. Our loadDashboard function supplies the independent-request policy within that launch. [25]"
-            }
-          ]
+          "title": "coroutineScope",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html",
+          "description": "Lexically bounded ownership and required child work."
         },
         {
-          "type": "code",
-          "code": "import androidx.lifecycle.ViewModel\nimport androidx.lifecycle.viewModelScope\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.*\nclass DashboardViewModel : ViewModel() {\n    private val mutableState = MutableStateFlow(ScreenState())\n    val state = mutableState.asStateFlow()\n    private var refreshJob: Job? = null\n    fun refresh() { // Call from the UI/Main thread.\n        refreshJob?.cancel() // Latest refresh wins.\n        refreshJob = viewModelScope.launch {\n            mutableState.update { it.copy(loading = true) }\n            try {\n                val result = loadDashboard()\n                mutableState.value = ScreenState(\n                    profile = result.profile.getOrNull(),\n                    orders = result.orders.getOrNull(),\n                    ordersError = result.orders.exceptionOrNull()\n                        ?.message,\n                    profileError = result.profile.exceptionOrNull()\n                        ?.message\n                )\n            } catch (e: CancellationException) {\n                throw e\n            } catch (e: Exception) {\n                mutableState.update {\n                    it.copy(loading = false, generalError = e.message)\n                }\n            }\n        }\n    }\n}"
+          "title": "withContext",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html",
+          "description": "Sequential result and structured execution in an updated context."
         },
         {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "This uses ScreenState (23) and loadDashboard (20). Cancellation prevents publishing a cancelled result. Repository calls must be main-safe; viewModelScope does not move blocking code off Main. For production, map diagnostic exception messages to stable user-facing text."
-            }
-          ]
+          "title": "Kotlin Flow API",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-flow/",
+          "description": "Streams and collection contracts."
         },
         {
-          "type": "note",
-          "title": "Exercise 18",
-          "runs": [
-            {
-              "text": "Inject a repository instead of top-level fixtures. Trigger refresh twice and verify only the newest result is published. Add a deliberate policy for retaining stale profile data during a failed refresh."
-            }
-          ]
+          "title": "Android coroutine best practices",
+          "url": "https://developer.android.com/kotlin/coroutines/coroutines-best-practices",
+          "description": "Main-safety and dispatcher ownership."
         }
-      ],
-      "group": "ANDROID LIFETIME",
-      "referenceNumbers": [
-        21,
-        25,
-        28,
-        29
-      ]
-    },
-    {
-      "id": "coroutines-26",
-      "title": "Android: collect with the lifecycle",
-      "summary": "Ownership of loading and ownership of rendering are different",
-      "stage": "WEEK 4",
-      "sourcePage": 26,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "A Fragment’s view can be destroyed while the Fragment object remains. Collect using viewLifecycleOwner so rendering stops with the view. repeatOnLifecycle starts its block at STARTED, cancels it below STARTED, and restarts it on reentry. It does not automatically cancel separate ViewModel requests. [25]"
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "import androidx.lifecycle.Lifecycle\nimport androidx.lifecycle.lifecycleScope\nimport androidx.lifecycle.repeatOnLifecycle\n\n// Inside Fragment.onViewCreated; viewModel and render exist.\nviewLifecycleOwner.lifecycleScope.launch {\n    viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {\n        viewModel.state.collect { state -> render(state) }\n    }\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "For two endless flows, collect each in a child launch within repeatOnLifecycle. Sequential collect calls never reach the second call while the first stream is still active. If either collector fails, the ordinary repeat block’s children fail as a group unless you intentionally add a different policy."
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "import androidx.compose.runtime.getValue\nimport androidx.lifecycle.compose.collectAsStateWithLifecycle\n\n// Inside a @Composable screen:\nval state by viewModel.state.collectAsStateWithLifecycle()\n// Render widgets from state."
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Compose collection turns StateFlow into lifecycle-aware Compose state. Keep rendering cheap and move requests to explicit ViewModel actions or properly keyed effects. Recomposition alone should not start a fresh network request."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "Project dependencies"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Use matching, compatible AndroidX Lifecycle artifacts: lifecycle-viewmodel-ktx and lifecycle-runtime-ktx for the ViewModel/Fragment examples, and lifecycle-runtime-compose for Compose collection. Add kotlinx-coroutines-android matching your core version to provide Main dispatching. Use your project’s version catalog and current Android documentation for AndroidX versions. [15, 25]"
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 19",
-          "runs": [
-            {
-              "text": "Navigate away and back; rotate the device; then remove the screen. Log collection starts/stops and request starts/stops separately. Explain which lifecycle owns each. For persistent work across process death, study WorkManager rather than relying on a coroutine scope."
-            }
-          ]
-        }
-      ],
-      "group": "ANDROID LIFETIME",
-      "referenceNumbers": [
-        15,
-        25
-      ]
-    },
-    {
-      "id": "coroutines-27",
-      "title": "Coroutine tests: virtual time",
-      "summary": "Control scheduling instead of sleeping and hoping",
-      "stage": "WEEK 5",
-      "sourcePage": 27,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "runTest supplies a TestScope and scheduler, skips delays on test dispatchers, and reports uncaught child failures. A StandardTestDispatcher queues work; runCurrent runs ready work, advanceTimeBy moves the virtual clock, and advanceUntilIdle drains scheduled work. Share one scheduler across test dispatchers. [22, 26]"
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "import kotlinx.coroutines.*\nimport kotlinx.coroutines.test.*\nimport kotlin.test.*\n\n@OptIn(ExperimentalCoroutinesApi::class)\nclass ProfileTest {\n    @Test fun profileUsesVirtualTime() = runTest {\n        val profile = async { fetchProfile() }\n        runCurrent() // Starts the async body at virtual t = 0.\n        assertFalse(profile.isCompleted)\n        advanceTimeBy(100)\n        runCurrent() // Executes tasks scheduled exactly at t = 100.\n        assertEquals(\"profile\", profile.await())\n        assertEquals(100L, testScheduler.currentTime)\n    }\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "The test verifies the fixture’s result and timing contract without waiting 100 real milliseconds. Tasks exactly at the target time may require runCurrent after advanceTimeBy. For outcome tests, prefer advanceUntilIdle or directly awaiting when exact timing is not part of the requirement."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "Make dispatchers controllable"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Inject a TestDispatcher into repositories rather than hard-coding IO or Default. Delays on real dispatchers do not use this virtual clock. For ViewModel JVM tests, replace Dispatchers.Main with a test dispatcher before creating the ViewModel, and reset Main afterward, usually with a reusable test rule. [26]"
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 20",
-          "runs": [
-            {
-              "text": "Change the fixture delay to 120 ms and update only a test that deliberately checks that timing. Write another test that cares only about the returned profile. Explain why a thread name assertion is less robust than a result assertion."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "For endlessly running test collectors, launch in backgroundScope so runTest can cancel them at the end, or explicitly cancelAndJoin them. An infinite loop can prevent advanceUntilIdle from reaching idle."
-            }
-          ]
-        }
-      ],
-      "group": "COROUTINE TESTING",
-      "referenceNumbers": [
-        22,
-        26
-      ]
-    },
-    {
-      "id": "coroutines-28",
-      "title": "Test the failure policy",
-      "summary": "Verify partial success, grouped failure, and caller cancellation",
-      "stage": "WEEK 5",
-      "sourcePage": 28,
-      "blocks": [
-        {
-          "type": "code",
-          "code": "@OptIn(ExperimentalCoroutinesApi::class)\nclass DashboardTest {\n    @Test fun ordersFailureKeepsProfile() = runTest {\n        val dashboard = loadDashboard()\n        assertEquals(\"profile\", dashboard.profile.getOrThrow())\n        assertIs<IllegalStateException>(\n            dashboard.orders.exceptionOrNull()\n        )\n    }\n    @Test fun cancellationIsNotAResultFailure() = runTest {\n        var returned = false\n        var cleaned = false\n        val job = launch {\n            try {\n                loadDashboard()\n                returned = true\n            } finally {\n                cleaned = true\n            }\n        }\n        runCurrent()\n        advanceTimeBy(20)\n        job.cancelAndJoin()\n        assertFalse(returned)\n        assertTrue(cleaned)\n        assertTrue(job.isCancelled)\n    }\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "These tests use the imports on page 27. The first proves the desired partial-success behavior. The second proves cancellation escapes the loader and cleanup finishes; it does not merely assert that an Exception was recorded."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "Test state and streams by their contracts"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "For a finite cold Flow, collect with toList and assert the ordered sequence. For StateFlow, assert the latest value when that is the requirement; conflation means every rapid intermediate update need not appear. When testing stateIn with WhileSubscribed, start an active collector or upstream will not run. For SharedFlow replay = 0, arrange for a collector to start before emission. [14, 15, 26]"
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Exercise 21",
-          "runs": [
-            {
-              "text": "Add an all-or-nothing test for fetchAll. Track a finally flag in profile and assert cleanup after orders fails. Then make orders succeed and verify both values. Extend the cancellation test to the CPU checksum and to a lifecycle-owned refresh."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Verify policy and lifetime with controlled dispatchers. Avoid real sleeps and wall-clock assertions. Check Android navigation and configuration changes on a device or emulator too."
-            }
-          ]
-        }
-      ],
-      "group": "COROUTINE TESTING",
-      "referenceNumbers": [
-        14,
-        15,
-        22,
-        26
-      ]
-    },
-    {
-      "id": "coroutines-32",
-      "title": "Progressive labs",
-      "summary": "Use a small controlled change to expose each rule",
-      "stage": "PRACTICE",
-      "sourcePage": 32,
-      "blocks": [
-        {
-          "type": "heading",
-          "text": "Lab A / execution and ownership"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "1. Use successful profile (100 ms) and successful orders (50 ms). Implement sequential calls, then two async calls started before awaiting. Predict approximately 150 ms vs 100 ms. Explain overlap without assuming two threads."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "2. Restore failing orders. Run the original launch program. Predict done before the failure, no completed profile print, and IllegalStateException escaping runBlocking. Remove launch and redraw the tree. Failure still reaches the ordinary parent."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "3. Wrap the group in fetchAll using coroutineScope. Catch the call’s failure in its caller. Confirm profile cancellation and caller continuation. Add finally flags rather than relying only on console timestamps."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "Lab B / independent results and cancellation"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "1. Use supervisorScope with two async calls. Await orders first without a local catch. Predict profile cancellation because the supervisor block throws. Now handle the orders exception inside that block and prove profile finishes."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "2. Use attempt and loadDashboard. Execute the four success/failure combinations. Preserve the original exception causes in the Results. Cancel the caller at 20 ms and assert that the loader does not return a Dashboard."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "3. Introduce a nested launch inside a supervisor and place both async calls inside that launch. Predict profile cancellation on an unhandled orders error. Move supervision to their direct parent and retest."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "Lab C / streams and Android lifetime"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "1. Collect profileUpdates twice and count request starts. Convert a cold source to stateIn using a named owner and an explicit sharing policy. Observe whether subscriber absence stops or restarts upstream."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "2. Emit a SharedFlow event with no collector. Show the difference between replay = 0 and replay = 1. Choose which events can be lost and which must be state or durable records."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "3. Build the Android dashboard. Rotate, background/foreground, and navigate away. Log the ViewModel lifetime, request lifetime, and view collection lifetime separately. Add virtual-time tests for the loader and refresh policy."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Stretch experiment",
-          "runs": [
-            {
-              "text": "Make profile take 50 ms and orders fail at 100 ms. Under ordinary structured concurrency, profile may finish before failure; the group still fails. A completed side effect is not rolled back. Explain how this differs from the original 100/50 ms fixtures."
-            }
-          ]
-        }
-      ],
-      "group": "PRACTICE AND WORKED SOLUTIONS",
-      "referenceNumbers": [
-        4,
-        8,
-        9,
-        22,
-        25,
-        27
-      ]
-    },
-    {
-      "id": "coroutines-33",
-      "title": "Checkpoints with answer cues",
-      "summary": "Try each question before reading its answer",
-      "stage": "PRACTICE",
-      "sourcePage": 33,
-      "blocks": [
-        {
-          "type": "heading",
-          "text": "A / syntax and execution"
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Does suspend mean background?",
-          "runs": [
-            {
-              "text": "No. It permits suspension; the current context governs execution."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Is delay blocking?",
-          "runs": [
-            {
-              "text": "It suspends the coroutine."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Why does launch resolve here?",
-          "runs": [
-            {
-              "text": "Its CoroutineScope receiver is supplied by the enclosing builder block."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "B / ownership and the original failure"
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Why does done print early?",
-          "runs": [
-            {
-              "text": "It belongs to the immediate block statements, while runBlocking still waits for children."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Must orders.await run for parent cancellation?",
-          "runs": [
-            {
-              "text": "No. A normal async child’s failure already fails its parent."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Does join retrieve a child exception?",
-          "runs": [
-            {
-              "text": "No; it waits for completion and may itself be cancelled with its waiter."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "C / cancellation and supervision"
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Does catching await repair a cancelled ordinary parent?",
-          "runs": [
-            {
-              "text": "No. A Job’s cancellation is not reversible."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Does supervision prevent caller cancellation?",
-          "runs": [
-            {
-              "text": "No; cancellation still travels down."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "What if await throws out of supervisorScope?",
-          "runs": [
-            {
-              "text": "The block fails and cancels unfinished children."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Does SupervisorJob supervise grandchildren?",
-          "runs": [
-            {
-              "text": "Only its direct-child edges; an ordinary intervening launch still groups its children."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Should Result catch cancellation?",
-          "runs": [
-            {
-              "text": "No; propagate CancellationException."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Does withContext(IO) interrupt any blocking API?",
-          "runs": [
-            {
-              "text": "No. Use cancellation-aware APIs or interruption where supported."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "When use coroutineScope?",
-          "runs": [
-            {
-              "text": "When one result is useless without the other and the operation should fail as a group."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "D / streams and Android"
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Do two cold collectors share one request?",
-          "runs": [
-            {
-              "text": "Normally no; each executes upstream."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Does StateFlow deliver every state transition?",
-          "runs": [
-            {
-              "text": "No; it conflates and suppresses equal updates."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Does extraBufferCapacity store events with no subscriber?",
-          "runs": [
-            {
-              "text": "With replay = 0, no."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "What survives a view collection stopping?",
-          "runs": [
-            {
-              "text": "ViewModel-owned work can continue; rendering collection restarts according to lifecycle policy."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "E / testing and final teach-back"
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Why inject dispatchers?",
-          "runs": [
-            {
-              "text": "To control scheduling and keep virtual-time tests deterministic."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "Why runCurrent after advancing to 100 ms?",
-          "runs": [
-            {
-              "text": "To execute tasks queued exactly at that boundary."
-            }
-          ]
-        },
-        {
-          "type": "checkpoint",
-          "prompt": "How test caller cancellation?",
-          "runs": [
-            {
-              "text": "Cancel and join the calling Job; assert cleanup and that no normal result was published."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Score your understanding",
-          "runs": [
-            {
-              "text": "Answer the related checkpoint questions correctly and explain one modified example from scratch before moving on. API recall without a correct Job tree does not count as a completed checkpoint."
-            }
-          ]
-        }
-      ],
-      "group": "PRACTICE AND WORKED SOLUTIONS",
-      "referenceNumbers": [
-        1,
-        4,
-        8,
-        14,
-        23,
-        26
-      ]
-    },
-    {
-      "id": "coroutines-36",
-      "title": "Worked solution: the failure matrix",
-      "summary": "Inject behavior to test all outcomes without editing fixtures",
-      "stage": "WORKED PRACTICE",
-      "sourcePage": 36,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Keep Dashboard (20) and attempt (19). This overload accepts suspend function values instead of fixed network fixtures. It remains attached to its caller and preserves the same independent-result contract."
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "suspend fun loadDashboard(\n    profileRequest: suspend () -> String,\n    ordersRequest: suspend () -> String\n): Dashboard = supervisorScope {\n    val p = async { attempt { profileRequest() } }\n    val o = async { attempt { ordersRequest() } }\n    Dashboard(p.await(), o.await())\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Put this test in src/test/kotlin. Use the imports on page 27. Each case takes 100 virtual ms, demonstrating that both delayed requests start before either is awaited. Success or failure changes the result, not whether both tasks are attempted."
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "@OptIn(ExperimentalCoroutinesApi::class)\nclass FailureMatrixTest {\n    @Test fun checksEveryCombination() = runTest {\n        for (failP in listOf(false, true)) {\n            for (failO in listOf(false, true)) {\n                val started = testScheduler.currentTime\n                val result = loadDashboard(\n                    profileRequest = {\n                        delay(100)\n                        check(!failP) { \"Wrong profile\" }\n                        \"profile\"\n                    },\n                    ordersRequest = {\n                        delay(50)\n                        check(!failO) { \"Wrong orders\" }\n                        \"orders\"\n                    }\n                )\n                assertEquals(!failP, result.profile.isSuccess)\n                assertEquals(!failO, result.orders.isSuccess)\n                assertEquals(100L, testScheduler.currentTime - started)\n            }\n        }\n    }\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Expected cases: success/success, success/failure, failure/success, failure/failure. Cancellation is a separate fifth case, covered on page 28; it must abort the call rather than return two ordinary failed Results. A failure converted inside attempt does not fail its child Job."
-            }
-          ]
-        }
-      ],
-      "group": "PRACTICE AND WORKED SOLUTIONS",
-      "referenceNumbers": [
-        8,
-        22,
-        26
-      ]
-    },
-    {
-      "id": "coroutines-37",
-      "title": "Worked solution: streams",
-      "summary": "Observe combined state and prove what broadcasts retain",
-      "stage": "WORKED PRACTICE",
-      "sourcePage": 37,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "combine waits for both sources to emit and then updates using their latest values. In this finite example, orders supplies loading at t = 0; profile arrives at t = 100; orders becomes ready at t = 150. The expected combined list contains two states. [27]"
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "class StreamTest {\n    @Test fun combinesLatestValues() = runTest {\n        val profile = flow { emit(fetchProfile()) }\n        val orders = flow {\n            emit(\"loading\")\n            delay(150)\n            emit(\"orders\")\n        }\n        val values = profile.combine(orders) { p, o -> p to o }\n            .toList()\n        assertEquals(listOf(\"profile\" to \"loading\",\n            \"profile\" to \"orders\"), values)\n    }\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "toList waits for completion. On endless StateFlow or SharedFlow, use take or a cancellable collector. Below, take(1) finishes after the first event. [23, 26]"
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "@OptIn(ExperimentalCoroutinesApi::class)\nclass BroadcastTest {\n    @Test fun noSubscriberMeansNoReplay() = runTest {\n        val events = MutableSharedFlow<String>(replay = 0,\n            extraBufferCapacity = 1)\n        events.emit(\"before\")\n        val received = mutableListOf<String>()\n        backgroundScope.launch {\n            events.take(1).toList(received)\n        }\n        runCurrent() // Subscribe before the next emission.\n        events.emit(\"after\")\n        runCurrent()\n        assertEquals(listOf(\"after\"), received)\n    }\n}"
-        },
-        {
-          "type": "note",
-          "title": "Try one controlled change",
-          "runs": [
-            {
-              "text": "Set replay = 1. The first received value becomes before, because the new subscriber receives replayed history. This is a different delivery contract, not a guarantee of exactly-once handling. Use the Flow and test imports on pages 21 and 27."
-            }
-          ]
-        }
-      ],
-      "group": "PRACTICE AND WORKED SOLUTIONS",
-      "referenceNumbers": [
-        22,
-        23,
-        26,
-        27
-      ]
-    },
-    {
-      "id": "coroutines-38",
-      "title": "Worked solution: shared state",
-      "summary": "Even one thread can lose updates across suspension",
-      "stage": "WORKED PRACTICE",
-      "sourcePage": 38,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "“Read a value, suspend, write a changed value” is not one indivisible operation. Another coroutine can read the same old value during the suspension. Dispatchers decide execution resources; they do not make this sequence atomic. [30]"
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "import kotlinx.coroutines.sync.Mutex\nimport kotlinx.coroutines.sync.withLock\n\nsuspend fun countUpdates(protected: Boolean): Int = coroutineScope {\n    var count = 0\n    val mutex = Mutex()\n    val workers = List(100) {\n        launch {\n            suspend fun increment() {\n                val before = count\n                yield() // Deliberately exposes interleaving.\n                count = before + 1\n            }\n            if (protected) mutex.withLock { increment() }\n            else increment()\n        }\n    }\n    workers.joinAll() // Read the result only after work finishes.\n    count\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "joinAll before reading count matters: returning count and letting coroutineScope wait afterward would capture the old Int value. Waiting for children does not recompute the block’s result."
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "class CounterTest {\n    @Test fun protectsTheWholeUpdate() = runTest {\n        assertTrue(countUpdates(protected = false) < 100)\n        assertEquals(100, countUpdates(protected = true))\n    }\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "The StandardTestDispatcher interleaves the unprotected reads at yield. Mutex protects the entire read/write sequence; waiting for its lock suspends rather than blocks a thread. It is non-reentrant: trying to lock the same mutex again from within its held block can deadlock. Keep real critical sections small. [32]"
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Choose protection by the invariant",
-          "runs": [
-            {
-              "text": "An atomic increment suffices for a single counter. A Mutex can protect several related values as one invariant. StateFlow.update atomically transforms one state value; it does not protect a network request plus another variable. Never put side effects in an update lambda that may be retried."
-            }
-          ]
-        }
-      ],
-      "group": "PRACTICE AND WORKED SOLUTIONS",
-      "referenceNumbers": [
-        22,
-        28,
-        30,
-        32
-      ]
-    },
-    {
-      "id": "coroutines-39",
-      "title": "Worked solution: Android unit tests",
-      "summary": "Install Main before the ViewModel is constructed",
-      "stage": "WORKED PRACTICE",
-      "sourcePage": 39,
-      "blocks": [
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Local JVM tests have no Android UI thread. Replace Main with a test dispatcher before using viewModelScope; reset it in finally. This test uses the ViewModel from page 25, its fixtures and ScreenState, plus imports from pages 25 and 27. It needs the host project’s compatible AndroidX dependencies. [26]"
-            }
-          ]
-        },
-        {
-          "type": "code",
-          "code": "@OptIn(ExperimentalCoroutinesApi::class)\nclass DashboardViewModelTest {\n    @Test fun publishesThePartialResult() = runTest {\n        Dispatchers.setMain(StandardTestDispatcher(testScheduler))\n        var model: DashboardViewModel? = null\n        try {\n            val vm = DashboardViewModel()\n            model = vm\n            vm.refresh()\n            runCurrent()\n            assertTrue(vm.state.value.loading)\n            advanceUntilIdle()\n            assertFalse(vm.state.value.loading)\n            assertEquals(\"profile\", vm.state.value.profile)\n            assertEquals(\"Wrong orders\", vm.state.value.ordersError)\n        } finally {\n            model?.viewModelScope?.cancel()\n            Dispatchers.resetMain()\n        }\n    }\n}"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "setMain affects process-wide dispatcher state, so do not run tests that replace it concurrently. Creating the test dispatcher from testScheduler explicitly ensures the ViewModel and runTest use the same virtual clock. Cancelling its scope prevents this test from leaving owned work running; it is not an assertion about the framework clearing the ViewModel."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "Configuration change is not ViewModel clearing"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "A correctly scoped ViewModel usually survives a configuration change such as rotation. viewModelScope is cancelled when that owner actually clears it, not merely whenever a view is destroyed. Navigation behavior depends on the ViewModel’s Activity, Fragment, or navigation-entry owner. [25]"
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Verify on a device or emulator",
-          "runs": [
-            {
-              "text": "Start a refresh and rotate: the old view collector stops, the new collector observes retained state, and the same ViewModel need not refetch. Navigate so its owner is removed: verify clearing and cancellation. Background the app: repeatOnLifecycle stops rendering collection; ViewModel work can continue while the process lives."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Confine refresh calls to Main before accessing refreshJob. With injected repositories, test slow-old/fast-new requests: only the latest should publish completed state."
-            }
-          ]
-        }
-      ],
-      "group": "PRACTICE AND WORKED SOLUTIONS",
-      "referenceNumbers": [
-        22,
-        25,
-        26
-      ]
-    },
-    {
-      "id": "coroutines-34",
-      "title": "Quick reference and glossary",
-      "summary": "A compact decision sheet to keep beside your editor",
-      "stage": "REFERENCE",
-      "sourcePage": 34,
-      "blocks": [
-        {
-          "type": "table",
-          "headers": [
-            "If you need to...",
-            "Use or remember..."
-          ],
-          "rows": [
-            [
-              "Start owned work without a returned value",
-              "launch; catch expected failures inside the operation."
-            ],
-            [
-              "Compute concurrent results",
-              "async in an owned scope; start both, then await."
-            ],
-            [
-              "Move one blocking/CPU operation",
-              "withContext(IO/Default); inject dispatchers."
-            ],
-            [
-              "Fail a request group together",
-              "coroutineScope; catch at its suspend call boundary."
-            ],
-            [
-              "Keep independent sibling requests alive",
-              "supervisorScope; handle failures inside its block."
-            ],
-            [
-              "Create a component-owned scope",
-              "Job or SupervisorJob plus dispatcher; define shutdown."
-            ],
-            [
-              "Stop work and wait for cleanup",
-              "cancelAndJoin; work must cooperate."
-            ],
-            [
-              "Represent recoverable errors",
-              "Result or domain types; rethrow cancellation."
-            ],
-            [
-              "Produce multiple values",
-              "Flow; check cold vs hot ownership."
-            ],
-            [
-              "Expose current UI state",
-              "Read-only StateFlow; immutable state updates."
-            ],
-            [
-              "Broadcast ephemeral values",
-              "SharedFlow with intentional replay/buffer policy."
-            ],
-            [
-              "Render Android state safely",
-              "repeatOnLifecycle / collectAsStateWithLifecycle."
-            ],
-            [
-              "Test coroutine policy",
-              "runTest; one scheduler; controlled dispatchers."
-            ]
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "Words to know"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Continuation:",
-              "strong": true
-            },
-            {
-              "text": " saved next step for resumable computation. "
-            },
-            {
-              "text": "Scope:",
-              "strong": true
-            },
-            {
-              "text": " launching boundary with an execution context. "
-            },
-            {
-              "text": "Context:",
-              "strong": true
-            },
-            {
-              "text": " keyed execution and lifecycle elements. "
-            },
-            {
-              "text": "Job:",
-              "strong": true
-            },
-            {
-              "text": " task lifecycle and ownership handle. "
-            },
-            {
-              "text": "Deferred:",
-              "strong": true
-            },
-            {
-              "text": " Job with a result. "
-            },
-            {
-              "text": "Structured concurrency:",
-              "strong": true
-            },
-            {
-              "text": " child work remains attached to an owner that waits for it. "
-            },
-            {
-              "text": "Supervision:",
-              "strong": true
-            },
-            {
-              "text": " independent failure across direct children. "
-            },
-            {
-              "text": "Conflation:",
-              "strong": true
-            },
-            {
-              "text": " skipping intermediate updates in favor of newer values. "
-            },
-            {
-              "text": "Virtual time:",
-              "strong": true
-            },
-            {
-              "text": " a controlled test clock for scheduled work."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "Three recurring mistakes",
-          "runs": [
-            {
-              "text": "A catch around launch does not catch its later body failure. async does not delay normal parent failure until await. supervisorScope does not make an exception escaping its block harmless."
-            }
-          ]
-        }
-      ],
-      "group": "REFERENCE AND READINESS",
-      "referenceNumbers": [
-        1,
-        4,
-        8,
-        9,
-        21,
-        22
       ]
     },
     {
       "id": "coroutines-40",
-      "title": "Readiness review and next steps",
-      "summary": "What completing this guide should and should not establish",
-      "stage": "REVIEW",
-      "sourcePage": 40,
+      "title": "Interview decisions and production tradeoffs",
+      "summary": "Explain a coroutine design through ownership, cancellation, state, and evidence.",
+      "stage": "DECISIONS AND REFERENCE",
+      "group": "DECISIONS AND REFERENCE",
       "blocks": [
         {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "This guide is sufficient for the original goal: understanding the profile/orders program from Kotlin syntax through ownership, cancellation, exceptions, supervision, Android state, and tests. Completing the labs is part of that goal; reading the explanations alone does not demonstrate the behavior."
+              "text": "A useful interview explanation connects a product requirement to an observable concurrency contract. For a search screen, “latest query wins” describes which result may render, but a complete design also identifies the screen model owner, main-safe repository calls, cancellation behavior, and handling of an obsolete request that returns late. Naming collectLatest alone leaves those questions unresolved. A design becomes easier to assess when success, ordinary failure, and caller cancellation are all described."
             }
           ]
         },
         {
-          "type": "heading",
-          "text": "A final assessment with concrete evidence"
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "For concurrent data sources, the key distinction is whether the combined result requires every source. Required siblings fit a grouped failure policy; independently useful results need explicit outcomes and failure isolation. Supervision changes propagation among children, while await can still throw into the enclosing block. A reasoned answer explains where the exception is converted, what remains cancellable, and which successful data is still meaningful after a sibling fails."
+            }
+          ]
         },
         {
           "type": "table",
           "headers": [
-            "Skill",
-            "Evidence you should produce"
+            "Design topic",
+            "Decision to explain",
+            "Evidence that fits"
           ],
           "rows": [
             [
-              "Trace ownership",
-              "Draw each Job edge in the original and supervised programs."
+              "Ownership",
+              "Which owner cancels the work?",
+              "Cancellation and cleanup observed at that boundary"
             ],
             [
-              "Explain failure",
-              "Predict output before running; explain why await order cannot defer normal child failure."
+              "Execution",
+              "Which API makes blocking work main-safe?",
+              "Injected dispatcher and thread-sensitive integration checks"
             ],
             [
-              "Choose a result policy",
-              "Implement both all-or-nothing and partial-success loaders."
+              "Screen state",
+              "Can intermediate values be skipped?",
+              "Current-state assertions plus explicit transition requirements"
             ],
             [
-              "Preserve cancellation",
-              "Cancel at 20 ms; assert no normal Dashboard return and completed cleanup."
+              "Broadcasts",
+              "What happens without subscribers?",
+              "Replay and active-subscriber tests kept separate"
             ],
             [
-              "Handle state",
-              "Distinguish empty data from failed data and define stale-data behavior."
+              "Replacement",
+              "Can obsolete success or failure render?",
+              "Controlled completion of old and new requests"
             ],
             [
-              "Handle stream lifetime",
-              "Demonstrate cold recollection, StateFlow conflation, and no-subscriber event loss."
-            ],
-            [
-              "Test Android integration",
-              "Replace Main in a JVM test; observe view collection and ViewModel lifetime on a device."
+              "Concurrency",
+              "Which invariant must be atomic?",
+              "Synchronization reasoning and suitable contention coverage"
             ]
           ]
         },
         {
-          "type": "heading",
-          "text": "Topics to study after this foundation"
-        },
-        {
           "type": "paragraph",
-          "small": false,
           "runs": [
             {
-              "text": "Learn callback bridging with suspendCancellableCoroutine and callbackFlow when integrating listener APIs. Study Channels and bounded concurrency when tasks need queues or many requests. Study WorkManager and persisted state when work must survive process death. These are follow-on topics rather than prerequisites for your original two-request example."
-            }
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "Review record"
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "The review checked the core rules against official Kotlin and Android documentation, corrected prose formatting of generic types, clarified runnable snippet placement, added test-engine setup, and supplied worked failure, stream, synchronization, and Android test examples."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "small": false,
-          "runs": [
-            {
-              "text": "Verification ran the central JVM examples, failure matrix, stream and synchronization checks, and the printed ViewModel unit test. Test bodies were compiled and invoked with assertions; Gradle/JUnit discovery is a separate setup check on page 35. Device lifecycle, navigation, and process-death behavior still require your Android project."
-            }
-          ]
-        },
-        {
-          "type": "note",
-          "title": "When to move on",
-          "runs": [
-            {
-              "text": "Move on when you can explain a changed example from its ownership tree and verify it with a controlled test. Repeat the lab if your explanation depends only on print order or thread names."
+              "text": "A virtual-time test provides evidence about controlled scheduling and state transitions. It does not establish database transactions, network cancellation support, or behavior under arbitrary real-thread contention. Those concerns call for integration checks and resource-specific reasoning. Likewise, SharedFlow buffering does not establish durable delivery, and a background dispatcher does not establish durable execution. A precise engineering explanation states the boundary of each guarantee and connects additional mechanisms, such as persistent work or acknowledged records, to requirements that cross that boundary."
             }
           ]
         }
       ],
-      "group": "REFERENCE AND READINESS",
-      "referenceNumbers": [
-        1,
-        4,
-        21,
-        26
+      "sources": [
+        {
+          "title": "supervisorScope",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/supervisor-scope.html",
+          "description": "Isolation is distinct from handling awaited failures."
+        },
+        {
+          "title": "runTest",
+          "url": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/kotlinx.coroutines.test/run-test.html",
+          "description": "Controlled scheduling and limits when real dispatchers participate."
+        },
+        {
+          "title": "Shared mutable state and concurrency",
+          "url": "https://kotlinlang.org/docs/shared-mutable-state-and-concurrency.html",
+          "description": "Atomicity and real concurrency reasoning."
+        }
       ]
     }
   ],
-  "references": [
-    {
-      "id": "reference-41-0",
-      "numbers": [
-        1
-      ],
-      "sourcePage": 41,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[1] ",
-            "strong": true
-          },
-          {
-            "text": "Coroutines basics",
-            "strong": true,
-            "href": "https://kotlinlang.org/docs/coroutines-basics.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Start here for setup, builders, suspension, and structured concurrency."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-41-1",
-      "numbers": [
-        2
-      ],
-      "sourcePage": 41,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[2] ",
-            "strong": true
-          },
-          {
-            "text": "Higher-order functions and lambdas",
-            "strong": true,
-            "href": "https://kotlinlang.org/docs/lambdas.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Read function types and function literals with receivers to decode builder syntax."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-41-2",
-      "numbers": [
-        3
-      ],
-      "sourcePage": 41,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[3] ",
-            "strong": true
-          },
-          {
-            "text": "Exception and error handling",
-            "strong": true,
-            "href": "https://kotlinlang.org/docs/exceptions.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Review try as an expression, catch types, finally, and throwing."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-41-3",
-      "numbers": [
-        4
-      ],
-      "sourcePage": 41,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[4] ",
-            "strong": true
-          },
-          {
-            "text": "Coroutine exceptions handling",
-            "strong": true,
-            "href": "https://kotlinlang.org/docs/exception-handling.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Read exception propagation and supervision after drawing the original Job tree."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-41-4",
-      "numbers": [
-        5
-      ],
-      "sourcePage": 41,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[5] ",
-            "strong": true
-          },
-          {
-            "text": "ensureActive API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/ensure-active.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Cancellation checks for long-running nonsuspending work."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-41-5",
-      "numbers": [
-        6
-      ],
-      "sourcePage": 41,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[6] ",
-            "strong": true
-          },
-          {
-            "text": "runInterruptible API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-interruptible.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Bridge JVM blocking APIs that support interruption."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-41-6",
-      "numbers": [
-        7
-      ],
-      "sourcePage": 41,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[7] ",
-            "strong": true
-          },
-          {
-            "text": "withTimeout API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Understand cooperative timeout and cancellation/resource races."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-41-7",
-      "numbers": [
-        8
-      ],
-      "sourcePage": 41,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[8] ",
-            "strong": true
-          },
-          {
-            "text": "supervisorScope API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/supervisor-scope.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Study block failure, sibling isolation, and unhandled launch exceptions."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-41-8",
-      "numbers": [
-        9
-      ],
-      "sourcePage": 41,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[9] ",
-            "strong": true
-          },
-          {
-            "text": "coroutineScope API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Review lexical ownership and the exception boundary."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-41-9",
-      "numbers": [
-        10
-      ],
-      "sourcePage": 41,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[10] ",
-            "strong": true
-          },
-          {
-            "text": "Job API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Lifecycle states, parent-child semantics, cancellation, and join."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-41-10",
-      "numbers": [
-        11
-      ],
-      "sourcePage": 41,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[11] ",
-            "strong": true
-          },
-          {
-            "text": "async API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Result storage, default parent cancellation, and start modes."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-41-11",
-      "numbers": [
-        12
-      ],
-      "sourcePage": 41,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[12] ",
-            "strong": true
-          },
-          {
-            "text": "withContext API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Context changes and cancellation when returning to a dispatcher."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-41-12",
-      "numbers": [
-        13
-      ],
-      "sourcePage": 41,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[13] ",
-            "strong": true
-          },
-          {
-            "text": "SupervisorJob API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-supervisor-job.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Direct-child independence and downward parent cancellation."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-41-13",
-      "numbers": [
-        29,
-        30,
-        31,
-        32
-      ],
-      "sourcePage": 41,
-      "block": {
-        "type": "paragraph",
-        "small": true,
-        "runs": [
-          {
-            "text": "[29] "
-          },
-          {
-            "text": "launch API",
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html"
-          },
-          {
-            "text": " / [30] "
-          },
-          {
-            "text": "Shared mutable state and concurrency",
-            "href": "https://kotlinlang.org/docs/shared-mutable-state-and-concurrency.html"
-          },
-          {
-            "text": "."
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "[31] "
-          },
-          {
-            "text": "Kotlin/JVM JUnit setup",
-            "href": "https://kotlinlang.org/docs/jvm-test-using-junit.html"
-          },
-          {
-            "text": " / [32] "
-          },
-          {
-            "text": "Mutex API",
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.sync/-mutex/"
-          },
-          {
-            "text": "."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-0",
-      "numbers": [
-        14
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[14] ",
-            "strong": true
-          },
-          {
-            "text": "StateFlow API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-state-flow/"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Equality, conflation, initial state, and never-completing collection."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-1",
-      "numbers": [
-        15
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[15] ",
-            "strong": true
-          },
-          {
-            "text": "Android: StateFlow and SharedFlow",
-            "strong": true,
-            "href": "https://developer.android.com/kotlin/flow/stateflow-and-sharedflow"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Sharing policies and lifecycle-aware state collection."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-2",
-      "numbers": [
-        16
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[16] ",
-            "strong": true
-          },
-          {
-            "text": "Coroutine context and dispatchers",
-            "strong": true,
-            "href": "https://kotlinlang.org/docs/coroutine-context-and-dispatchers.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Read context inheritance, dispatcher selection, and parent Jobs."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-3",
-      "numbers": [
-        17
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[17] ",
-            "strong": true
-          },
-          {
-            "text": "Composing suspending functions",
-            "strong": true,
-            "href": "https://kotlinlang.org/docs/composing-suspending-functions.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Compare sequential composition with structured concurrent async."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-4",
-      "numbers": [
-        18
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[18] ",
-            "strong": true
-          },
-          {
-            "text": "flow builder API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/flow.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Cold execution, cancellable emission, and context invariants."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-5",
-      "numbers": [
-        19
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[19] ",
-            "strong": true
-          },
-          {
-            "text": "flowOn API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/flow-on.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Upstream context changes and in-flight emissions on cancellation."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-6",
-      "numbers": [
-        20
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[20] ",
-            "strong": true
-          },
-          {
-            "text": "Flow catch API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/catch.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Upstream recovery and transparent downstream/cancellation behavior."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-7",
-      "numbers": [
-        21
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[21] ",
-            "strong": true
-          },
-          {
-            "text": "Android: coroutine best practices",
-            "strong": true,
-            "href": "https://developer.android.com/kotlin/coroutines/coroutines-best-practices"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Main-safe suspend functions, dispatcher injection, scopes, and cancellation."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-8",
-      "numbers": [
-        22
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[22] ",
-            "strong": true
-          },
-          {
-            "text": "kotlinx-coroutines-test API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "runTest, TestScope, test schedulers, and replacing Main."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-9",
-      "numbers": [
-        23
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[23] ",
-            "strong": true
-          },
-          {
-            "text": "SharedFlow API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-shared-flow/"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Replay, buffering, and behavior with no subscribers."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-10",
-      "numbers": [
-        24
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[24] ",
-            "strong": true
-          },
-          {
-            "text": "runCatching API",
-            "strong": true,
-            "href": "https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/run-catching.html"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Observe the Throwable catch contract before applying it to suspend code."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-11",
-      "numbers": [
-        25
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[25] ",
-            "strong": true
-          },
-          {
-            "text": "Android: lifecycle-aware coroutines",
-            "strong": true,
-            "href": "https://developer.android.com/topic/libraries/architecture/coroutines"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "viewModelScope, lifecycleScope, and repeatOnLifecycle."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-12",
-      "numbers": [
-        26
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "[26] ",
-            "strong": true
-          },
-          {
-            "text": "Android: testing Kotlin coroutines",
-            "strong": true,
-            "href": "https://developer.android.com/kotlin/coroutines/test"
-          },
-          {
-            "text": "\n"
-          },
-          {
-            "text": "Practical tests with shared schedulers, dispatcher injection, and Main replacement."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-13",
-      "numbers": [
-        27
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": true,
-        "runs": [
-          {
-            "text": "[27] Operator APIs: "
-          },
-          {
-            "text": "buffer",
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/buffer.html"
-          },
-          {
-            "text": ", "
-          },
-          {
-            "text": "conflate",
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/conflate.html"
-          },
-          {
-            "text": ", "
-          },
-          {
-            "text": "collectLatest",
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/collect-latest.html"
-          },
-          {
-            "text": ", "
-          },
-          {
-            "text": "combine",
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/combine.html"
-          },
-          {
-            "text": ", "
-          },
-          {
-            "text": "zip",
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/zip.html"
-          },
-          {
-            "text": ", "
-          },
-          {
-            "text": "retryWhen",
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/retry-when.html"
-          },
-          {
-            "text": "."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-14",
-      "numbers": [
-        28
-      ],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": true,
-        "runs": [
-          {
-            "text": "[28] "
-          },
-          {
-            "text": "MutableStateFlow.update API",
-            "href": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/update.html"
-          },
-          {
-            "text": ": atomic updates and lambda reevaluation."
-          }
-        ]
-      }
-    },
-    {
-      "id": "reference-42-15",
-      "numbers": [],
-      "sourcePage": 42,
-      "block": {
-        "type": "paragraph",
-        "small": false,
-        "runs": [
-          {
-            "text": "Documentation checked on 30 September 2026. API pages inspected show kotlinx.coroutines 1.11.0. AndroidX artifact versions should follow the target project’s compatible version catalog. Code examples are teaching fixtures, not network-service implementations."
-          }
-        ]
-      }
-    }
-  ],
-  "aliases": {
-    "coroutines-41": "coroutines-03",
-    "coroutines-42": "coroutines-21"
-  },
   "groups": [
     {
-      "label": "START HERE",
+      "label": "FOUNDATIONS",
       "ids": [
         "coroutines-01",
-        "coroutines-02"
-      ]
-    },
-    {
-      "label": "FOUNDATIONS AND LAB SETUP",
-      "ids": [
-        "coroutines-03",
-        "coroutines-35",
+        "coroutines-02",
         "coroutines-04",
         "coroutines-05",
         "coroutines-06",
@@ -3891,7 +2046,7 @@ window.PRIMERS.push({
       ]
     },
     {
-      "label": "OWNERSHIP AND STRUCTURED CONCURRENCY",
+      "label": "OWNERSHIP AND BUILDERS",
       "ids": [
         "coroutines-08",
         "coroutines-09",
@@ -3910,12 +2065,13 @@ window.PRIMERS.push({
       ]
     },
     {
-      "label": "DISPATCHERS AND RESULT POLICIES",
+      "label": "EXECUTION AND RESULTS",
       "ids": [
         "coroutines-17",
         "coroutines-18",
         "coroutines-19",
-        "coroutines-20"
+        "coroutines-20",
+        "coroutines-38"
       ]
     },
     {
@@ -3935,29 +2091,34 @@ window.PRIMERS.push({
       ]
     },
     {
-      "label": "COROUTINE TESTING",
+      "label": "TESTING",
       "ids": [
         "coroutines-27",
-        "coroutines-28"
-      ]
-    },
-    {
-      "label": "PRACTICE AND WORKED SOLUTIONS",
-      "ids": [
-        "coroutines-32",
-        "coroutines-33",
-        "coroutines-36",
+        "coroutines-28",
         "coroutines-37",
-        "coroutines-38",
         "coroutines-39"
       ]
     },
     {
-      "label": "REFERENCE AND READINESS",
+      "label": "DECISIONS AND REFERENCE",
       "ids": [
         "coroutines-34",
         "coroutines-40"
       ]
     }
-  ]
+  ],
+  "aliases": {
+    "coroutines-41": "coroutines-07",
+    "coroutines-42": "coroutines-21"
+  },
+  "redirects": {
+    "coroutines-03": "coroutines-07",
+    "coroutines-29": "coroutines-01",
+    "coroutines-30": "coroutines-01",
+    "coroutines-31": "coroutines-01",
+    "coroutines-32": "coroutines-40",
+    "coroutines-33": "coroutines-40",
+    "coroutines-35": "coroutines-27",
+    "coroutines-36": "coroutines-28"
+  }
 });

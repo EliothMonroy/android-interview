@@ -1,12 +1,14 @@
 # Android Interview Field Guide
 
-A mobile-first, dependency-free study website with 102 primer lessons across Kotlin, data structures, algorithms, Android (Views and Compose), and mobile system design, plus a 37-chapter Kotlin Coroutines course with chapter-specific resource footers.
+A mobile-first, dependency-free study website with 102 primer lessons across Kotlin, data structures, algorithms, Android (Views and Compose), and mobile system design, plus a 32-chapter Kotlin Coroutines course with chapter-specific resource footers.
 
 Each lesson has a Kotlin example, a practical use case, a pitfall, a revealable interview answer, and an immediate-feedback quiz. The algorithms section also includes a step-through binary search lab. Reviewed lessons and light/dark/system preferences stay in local browser storage.
 
 ## Kotlin Coroutines course
 
-Select **Kotlin Coroutines** in the navigation to study native web chapters adapted from the PDF: explanations, code, tables, exercises, checkpoint answers, worked solutions, glossary, and official resources. Jump between chapters, follow page references, copy individual examples, and track review progress offline. Runnable setup precedes the examples, and worked solutions follow testing fundamentals. The five-week study plan is omitted from the web course and remains in the downloadable PDF. Resources appear in the relevant chapter footers instead of separate chapters. Original PDF links and saved review IDs remain valid. The retained chapters preserve the source edition reviewed on 30 September 2026. See the [migration and page map](docs/study-guides/coroutines-web-migration.md) for content-fidelity checks.
+Select **Kotlin Coroutines** for an independent web reference: suspension, async/await, ownership, cancellation, failures, dispatchers, streams, Android lifecycle, testing, and shared state. Each topic provides explanations and focused examples, with relevant official documentation in its footer. Chapter navigation, code copying, revealable interview answers, and local review tracking work offline.
+
+The PDF is optional further reading. The web course does not reproduce its page map, weekly plan, lab setup, exercises, or capstone. Examples define local supporting code or identify their Android/API context. Existing conceptual IDs are preserved, and former workbook bookmarks open related topics without changing saved review history. See the [editorial review and compatibility map](docs/study-guides/coroutines-web-migration.md).
 
 ## Study guides
 
@@ -44,7 +46,7 @@ On browsers exposing `document.modelContext`, an optional `set_current_lesson_re
 
 ## Coverage review
 
-The guide currently contains 102 primer lessons: 19 Kotlin, 12 data structures, 19 algorithms, 31 Android, and 21 mobile system design, plus the 37-chapter coroutines course. See [CONTENT_REVIEW.md](CONTENT_REVIEW.md) for the gap assessment, scope, sources and practice method. The Kotlin and Android lessons include expanded example walkthroughs, tradeoffs, and interview explanations. Android includes explicit MVVM, MVI, and MVVM-versus-MVI lessons using a common search screen. Reading completion is not a readiness certificate; use the applied drills and tailor specialist study to the target role.
+The guide currently contains 102 primer lessons: 19 Kotlin, 12 data structures, 19 algorithms, 31 Android, and 21 mobile system design, plus the 32-chapter coroutines course. See [CONTENT_REVIEW.md](CONTENT_REVIEW.md) for the gap assessment, scope, sources and practice method. The Kotlin and Android lessons include expanded example walkthroughs, tradeoffs, and interview explanations. Android includes explicit MVVM, MVI, and MVVM-versus-MVI lessons using a common search screen. Reading completion is not a readiness certificate; use the applied drills and tailor specialist study to the target role.
 
 ## Contributing
 

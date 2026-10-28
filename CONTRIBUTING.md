@@ -14,4 +14,6 @@ git diff --check
 
 Preserve existing lesson IDs and local review history. Include shipped assets in the build and service-worker cache, and bump the cache name and versioned URLs together when assets change. Keep the site mobile-first, dependency-free at runtime, and usable offline.
 
-For changes to the coroutines course, preserve the complete source content or explain intentional changes in the PR. The PDF manifest test checks rendered text, code, table counts, and resource links for every source page. Updating the source PDF requires re-extracting and reviewing that manifest; do not update hashes simply to hide a content regression.
+For changes to the coroutines course, treat the PDF as a reference, not a copy contract. Author independent informational chapters with accurate, concise explanations and focused examples. Avoid page-number references, lab prerequisites, exercise schedules, dependency pins, and execution claims inherited from the PDF. Define snippet dependencies locally or identify the relevant Android/API context. Verify technical guidance against primary Kotlin and Android documentation and link relevant sources in chapter footers.
+
+Preserve conceptual lesson IDs and saved review history where possible; provide related-topic routes for removed workbook chapters. The historical PDF manifests record provenance only. Do not require rewritten prose to match PDF text hashes or update those hashes to mask changes. Keep the optional PDF's byte identity, packaging, offline behavior, and navigation tests separate from editorial validation.
