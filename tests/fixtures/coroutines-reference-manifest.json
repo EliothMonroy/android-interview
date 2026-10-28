@@ -1,0 +1,44 @@
+[
+  {
+    "sourcePage": 41,
+    "blockIds": [
+      "reference-41-0",
+      "reference-41-1",
+      "reference-41-2",
+      "reference-41-3",
+      "reference-41-4",
+      "reference-41-5",
+      "reference-41-6",
+      "reference-41-7",
+      "reference-41-8",
+      "reference-41-9",
+      "reference-41-10",
+      "reference-41-11",
+      "reference-41-12",
+      "reference-41-13"
+    ],
+    "bodySha256": "a657ad6677185b3c15e0e73d8b59c566ad665abc8ebce27c9fded167189c0cef"
+  },
+  {
+    "sourcePage": 42,
+    "blockIds": [
+      "reference-42-0",
+      "reference-42-1",
+      "reference-42-2",
+      "reference-42-3",
+      "reference-42-4",
+      "reference-42-5",
+      "reference-42-6",
+      "reference-42-7",
+      "reference-42-8",
+      "reference-42-9",
+      "reference-42-10",
+      "reference-42-11",
+      "reference-42-12",
+      "reference-42-13",
+      "reference-42-14",
+      "reference-42-15"
+    ],
+    "bodySha256": "6c1670252bd5f4fbab989d0ce3fb18b27d689eb2951da2976cba9b673fcaa37e"
+  }
+]
